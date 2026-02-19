@@ -1,0 +1,59 @@
+name: Setup Checklist
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  setup-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: './backend/package-lock.json'
+    
+    - name: Install dependencies
+      working-directory: ./backend
+      run: npm install
+    
+    - name: Check for environment variables
+      run: |
+        if [ ! -f ./backend/.env ]; then
+          echo "Warning: .env file not found. Copy .env.example to .env"
+          cp ./backend/.env.example ./backend/.env
+        fi
+    
+    - name: Verify SSL certificates
+      run: |
+        if [ ! -f ./backend/server.key ] || [ ! -f ./backend/server.crt ]; then
+          echo "Warning: SSL certificates not found. Generate with: ./generate-ssl.sh"
+        fi
+    
+    - name: Check code style
+      working-directory: ./backend
+      run: npm audit --production
+      continue-on-error: true
+    
+    - name: Verify file structure
+      run: |
+        echo "Checking project structure..."
+        if [ ! -f README.md ]; then echo "❌ README.md missing"; exit 1; fi
+        if [ ! -f LICENSE ]; then echo "❌ LICENSE missing"; exit 1; fi
+        if [ ! -f .gitignore ]; then echo "❌ .gitignore missing"; exit 1; fi
+        echo "✅ All essential files present"
+    
+    - name: List important files
+      run: |
+        echo "Project structure:"
+        ls -la | grep -E '(README|LICENSE|\.git)'
+        echo ""
+        echo "Backend structure:"
+        ls -la ./backend | head -20

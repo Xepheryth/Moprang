@@ -1,0 +1,25 @@
+# Auto-detect text files and normalize line endings to LF
+* text=auto
+
+# Text files
+*.md text
+*.txt text
+*.json text
+*.js text
+*.html text
+*.css text
+*.sh text eol=lf
+*.bat text eol=crlf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.db binary
+*.sqlite binary
+
+# Git-specific files
+.gitignore text
+.gitattributes text

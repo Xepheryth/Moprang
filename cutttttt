@@ -1,0 +1,2 @@
+<a href="login.html" id="login-btn" class="login-btn">Login</a>
+<a href="login.html" id="register-btn" class="register-btn">Register</a>

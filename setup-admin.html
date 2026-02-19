@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Setup Admin Account</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+    .container { max-width: 400px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h2 { color: #FFA500; text-align: center; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    button { width: 100%; padding: 10px; background: #FFD700; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px; }
+    button:hover { background: #FFA500; }
+    .status { margin-top: 15px; padding: 10px; border-radius: 4px; text-align: center; display: none; }
+    .status.success { background: #c8e6c9; color: #2e7d32; }
+    .status.error { background: #ffcdd2; color: #c62828; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Setup Admin Account</h2>
+    <form id="admin-form">
+      <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" placeholder="admin" value="admin" required>
+      </div>
+      <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" id="email" placeholder="admin@kans.local" value="admin@kans.local" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" placeholder="Enter a strong password" required>
+      </div>
+      <div class="form-group">
+        <label for="confirm-password">Confirm Password:</label>
+        <input type="password" id="confirm-password" placeholder="Confirm password" required>
+      </div>
+      <button type="submit">Create Admin Account</button>
+    </form>
+    <div id="status" class="status"></div>
+  </div>
+
+  <script>
+    document.getElementById('admin-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      const statusEl = document.getElementById('status');
+
+      // Validate
+      if (!username || !email || !password || !confirmPassword) {
+        showStatus('Semua field diperlukan', 'error');
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        showStatus('Password dan konfirmasi tidak cocok', 'error');
+        return;
+      }
+
+      if (password.length < 8) {
+        showStatus('Password minimal 8 karakter', 'error');
+        return;
+      }
+
+      if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+        showStatus('Password harus memiliki huruf besar, huruf kecil, dan angka', 'error');
+        return;
+      }
+
+      // Add to localStorage
+      try {
+        const users = JSON.parse(localStorage.getItem('kans_users') || '[]');
+        
+        if (users.find(u => u.username === username)) {
+          showStatus('Username sudah terdaftar', 'error');
+          return;
+        }
+
+        users.push({ username, email, password });
+        localStorage.setItem('kans_users', JSON.stringify(users));
+        
+        showStatus(`✓ Admin account "${username}" berhasil dibuat! Anda bisa login di login.html`, 'success');
+        document.getElementById('admin-form').reset();
+      } catch (err) {
+        showStatus('Error: ' + err.message, 'error');
+      }
+    });
+
+    function showStatus(msg, type) {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = msg;
+      statusEl.className = 'status ' + type;
+      statusEl.style.display = 'block';
+    }
+  </script>
+</body>
+</html>

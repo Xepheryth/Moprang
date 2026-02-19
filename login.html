@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <!DOCTYPE html>
+  <html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login - KANS</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      /* Small overrides for login page */
+      .auth-container{ max-width:420px; margin:60px auto; padding:20px; background:#fff; border-radius:8px; box-shadow:0 6px 30px rgba(0,0,0,0.08);} 
+      .auth-tabs{ display:flex; gap:8px; margin-bottom:12px; }
+      .auth-tabs button{ flex:1; padding:8px; border-radius:6px; border:1px solid #e6c86a; background:#fff; cursor:pointer; }
+      .auth-tabs button.active{ background:linear-gradient(135deg,#FFD700,#FFA500); color:#fff; border:none; }
+      .auth-form{ display:none; }
+      .auth-form.active{ display:block; }
+      .small-note{ font-size:13px; color:#666; text-align:center; margin-top:10px; }
+      .link-like{ color:#FFA500; cursor:pointer; text-decoration:none; }
+    </style>
+  </head>
+  <body>
+    <div class="auth-container">
+      <h2 style="text-align:center; color:#FFA500; margin-bottom:6px;">KANS - Masuk</h2>
+      <div class="auth-tabs">
+        <button id="tab-login" class="active">Login</button>
+        <button id="tab-register">Register</button>
+      </div>
+
+      <div id="login-form" class="auth-form active">
+        <div class="form-row">
+          <input type="text" id="lg-username" placeholder="Username" required>
+        </div>
+        <div class="form-row">
+          <input type="password" id="lg-password" placeholder="Password" required>
+        </div>
+        <div class="form-row">
+          <button id="btn-login">Login</button>
+        </div>
+        <div class="small-note">Belum punya akun? <a id="goto-register" class="link-like">Daftar sekarang</a></div>
+      </div>
+
+      <div id="register-form" class="auth-form">
+        <div class="form-row">
+          <input type="text" id="rg-username" placeholder="Username" required>
+        </div>
+        <div class="form-row">
+          <input type="email" id="rg-email" placeholder="Email" required>
+        </div>
+        <div class="form-row">
+          <input type="password" id="rg-password" placeholder="Password (min 8 char, uppercase, lowercase, number)" required>
+        </div>
+        <div class="form-row">
+          <input type="password" id="rg-password2" placeholder="Konfirmasi Password" required>
+        </div>
+        <div class="form-row">
+          <button id="btn-register">Daftar</button>
+        </div>
+        <div class="small-note">Sudah punya akun? <a id="goto-login" class="link-like">Masuk</a></div>
+      </div>
+    </div>
+
+    <script>
+    (function(){
+      const API_BASE = 'https://localhost:3000/api'; // adjust jika perlu
+
+      // UI tabs
+      const tabLogin = document.getElementById('tab-login');
+      const tabRegister = document.getElementById('tab-register');
+      const formLogin = document.getElementById('login-form');
+      const formRegister = document.getElementById('register-form');
+      const gotoRegister = document.getElementById('goto-register');
+      const gotoLogin = document.getElementById('goto-login');
+
+      function showLogin(){ tabLogin.classList.add('active'); tabRegister.classList.remove('active'); formLogin.classList.add('active'); formRegister.classList.remove('active'); }
+      function showRegister(){ tabRegister.classList.add('active'); tabLogin.classList.remove('active'); formRegister.classList.add('active'); formLogin.classList.remove('active'); }
+      tabLogin.addEventListener('click', showLogin);
+      tabRegister.addEventListener('click', showRegister);
+      gotoRegister.addEventListener('click', showRegister);
+      gotoLogin.addEventListener('click', showLogin);
+
+      // Local fallback helpers
+      function getUsersLocal(){ try{ return JSON.parse(localStorage.getItem('kans_users')||'[]'); }catch(e){return []} }
+      function saveUsersLocal(users){ localStorage.setItem('kans_users', JSON.stringify(users)); }
+
+      async function postJSON(url, body){
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        return res.json();
+      }
+
+      async function registerRemote(username, email, password){
+        const url = `${API_BASE.replace(/\/$/, '')}/register`;
+        return postJSON(url, { username, email, password });
+      }
+      async function loginRemote(username, password){
+        const url = `${API_BASE.replace(/\/$/, '')}/login`;
+        return postJSON(url, { username, password });
+      }
+
+      async function registerUser(username, email, password){
+        if(API_BASE){
+          try{ const r = await registerRemote(username,email,password); return r; }catch(err){ 
+            console.warn('Backend unavailable, using local storage:', err.message);
+            // Fallback to local
+            const users = getUsersLocal();
+            if(users.find(u=>u.username===username)) return { success:false, message:'Username sudah terdaftar' };
+            users.push({ username, email, password });
+            saveUsersLocal(users);
+            return { success:true, message:'Registrasi berhasil (mode lokal)' };
+          }
+        } else {
+          const users = getUsersLocal();
+          if(users.find(u=>u.username===username)) return { success:false, message:'Username sudah terdaftar' };
+          users.push({ username, email, password });
+          saveUsersLocal(users);
+          return { success:true, message:'Registrasi berhasil (lokal)'};
+        }
+      }
+
+      async function loginUser(username, password){
+        if(API_BASE){
+          try{ const r = await loginRemote(username,password); return r; }catch(err){ 
+            console.warn('Backend unavailable, using local storage:', err.message);
+            // Fallback to local
+            const users = getUsersLocal();
+            const found = users.find(u=>u.username===username && u.password===password);
+            if(!found) return { success:false, message: 'Username atau password salah' };
+            return { success:true, message:'Login berhasil (mode lokal)', username };
+          }
+        } else {
+          const users = getUsersLocal();
+          const found = users.find(u=>u.username===username && u.password===password);
+          if(!found) return { success:false, message: 'Username atau password salah' };
+          return { success:true, message:'Login berhasil (lokal)', username };
+        }
+      }
+
+      function validatePasswordStrength(password){
+        if(password.length < 8) return { ok: false, msg: 'Password minimal 8 karakter' };
+        if(!/[A-Z]/.test(password)) return { ok: false, msg: 'Password harus mengandung huruf besar' };
+        if(!/[a-z]/.test(password)) return { ok: false, msg: 'Password harus mengandung huruf kecil' };
+        if(!/[0-9]/.test(password)) return { ok: false, msg: 'Password harus mengandung angka' };
+        return { ok: true };
+      }
+
+      // Register handler (auto-login on success)
+      document.getElementById('btn-register').addEventListener('click', async function(e){
+        e.preventDefault();
+        const u = document.getElementById('rg-username').value.trim();
+        const em = document.getElementById('rg-email').value.trim();
+        const p = document.getElementById('rg-password').value;
+        const p2 = document.getElementById('rg-password2').value;
+        if(!u || !em || !p){ alert('Semua field diperlukan'); return; }
+        if(p !== p2){ alert('Password dan konfirmasi tidak sama'); return; }
+        const pwc = validatePasswordStrength(p);
+        if(!pwc.ok){ alert(pwc.msg); return; }
+        const res = await registerUser(u, em, p);
+        if(res && res.success){
+          // try auto-login after successful registration
+          const loginRes = await loginUser(u, p);
+          if(loginRes && loginRes.success){
+            if(loginRes.token) localStorage.setItem('kans_token', loginRes.token);
+            if(loginRes.role) localStorage.setItem('kans_role', loginRes.role);
+            localStorage.setItem('kans_current', loginRes.username || u);
+            window.location.href = 'Front.html';
+          } else {
+            alert(res.message || 'Registrasi berhasil. Silakan login.');
+            showLogin();
+          }
+        }
+        else { alert(res.message || 'Gagal registrasi'); }
+      });
+
+      // Login handler
+      document.getElementById('btn-login').addEventListener('click', async function(e){
+        e.preventDefault();
+        const u = document.getElementById('lg-username').value.trim();
+        const p = document.getElementById('lg-password').value;
+        if(!u || !p){ alert('Username dan password diperlukan'); return; }
+        const res = await loginUser(u,p);
+        if(res && res.success){
+          if(res.token) localStorage.setItem('kans_token', res.token);
+          if(res.role) localStorage.setItem('kans_role', res.role);
+          localStorage.setItem('kans_current', res.username || u);
+          window.location.href = 'Front.html';
+        } else {
+          alert(res.message || 'Login gagal');
+        }
+      });
+
+      // If already logged in, go to main
+      try{
+        if(localStorage.getItem('kans_current') || localStorage.getItem('kans_token')){
+          window.location.href = 'Front.html';
+        }
+      }catch(e){}
+    })();
+    </script>
+  </body>
+  </html>

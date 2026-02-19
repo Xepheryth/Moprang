@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Project Detail - KANS</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-content">
+        <img src="media/logo KANS.png" style="height: 45px; vertical-align: left;">
+        <nav class="navbar">
+          <ul class="nav-menu">
+            <li><a href="Front.html" class="nav-link">Beranda</a></li>
+            <li><a href="Front.html" class="nav-link">Daftar Project</a></li>
+            <li><a href="#" class="nav-link" id="profile-link" style="display:none;">Profile</a></li>
+          </ul>
+          <div class="search-box">
+            <input type="text" id="search-input" placeholder=" " class="search-input">
+            <button id="search-btn" class="search-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </button>
+          </div>
+        </nav>
+        <div class="header-actions">
+          <div id="user-badge" class="user-badge" style="display:none;"></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-content" style="padding:32px; margin:0 auto;">
+      <!-- Project Header Section -->
+      <div style="margin-bottom:5px;">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between;margin-left: auto;position: relative; gap:500px; margin-bottom:5px;">
+          <div>
+            <h1 id="project-title" style="margin:0; width:500px; height:60px; font-size:32px; color:#333;">Project</h1>
+            <p id="project-info" style="margin:8px 0 0 0; font-size:14px; color:#666;"></p>
+          </div>
+          <button id="project-menu-btn" aria-haspopup="true" aria-expanded="false" title="Menu" style="background:#fff;margin-left: auto; border:1px solid #ddd; color:#666; padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.08); transition:all 0.2s;">⋮</button>
+          <div id="project-menu" style="display:none; position:absolute; right:32px; top:130px; background:#fff; border:1px solid #ddd; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:120; min-width:140px; overflow:hidden;">
+            <button id="add-area-from-menu-btn" class="project-action-btn" style="display:block; width:100%; text-align:left; padding:10px 14px; background:transparent; border:0; cursor:pointer; font-size:14px; color:#333; font-weight:600;">Tambah Area</button>
+            <button id="edit-project-btn" class="project-action-btn" style="display:block; width:100%; text-align:left; padding:10px 14px; background:transparent; border:0; cursor:pointer; font-size:14px; color:#333;">Edit</button>
+            <button id="delete-project-btn" class="project-action-btn" style="display:block; width:100%; text-align:left; padding:10px 14px; background:transparent; border:0; cursor:pointer; color:#d32f2f; font-size:14px;">Hapus</button>
+          </div>
+        </div>
+        <div id="project-edit-form" style="display:none; background:#fff; padding:16px; border-radius:8px; border:1px solid #ddd;">
+          <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:12px; color:#666; margin-bottom:6px;">Nama Project</label>
+            <input type="text" id="edit-project-name" style="padding:8px 12px; width:100%; border:1px solid #ddd; border-radius:6px; font-size:14px;" />
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:12px; color:#666; margin-bottom:6px;">Periode</label>
+            <input type="text" id="edit-project-period" style="padding:8px 12px; width:100%; border:1px solid #ddd; border-radius:6px; font-size:14px;" />
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button id="save-project-btn" class="project-action-btn primary" style="flex:1; padding:8px 12px; background:#ffa500; color:#fff; border:0; border-radius:6px; cursor:pointer; font-weight:600;">Simpan</button>
+            <button id="cancel-edit-btn" class="project-action-btn secondary" style="flex:1; padding:8px 12px; background:#ddd; color:#333; border:0; border-radius:6px; cursor:pointer; font-weight:600;">Batal</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Area Management Section -->
+      <section id="area-management" style="margin-bottom:0;">
+        <h2 style="margin:0;position: relative;text-align: left ; font-size:18px; color:#333;">Daftar Area :</h2>
+        <div id="areas-list" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; margin-top:20px;"></div>
+      </section>
+
+      <!-- Current Area Detail Section (shown when area is selected) -->
+      <section id="area-detail-section" style="margin-top:32px; display:none; background:#fff; padding:24px; border-radius:8px; border:1px solid #ddd;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid #eee;">
+          <h2 id="area-detail-title" style="margin:0; font-size:20px; color:#333;">Area</h2>
+          <div style="display:flex; gap:8px;">
+            <button id="edit-area-btn" class="project-action-btn secondary" style="padding:6px 12px; background:#f5f5f5; color:#333; border:1px solid #ddd; border-radius:6px; cursor:pointer; font-size:12px;">Edit Area</button>
+            <button id="delete-area-btn" class="project-action-btn danger" style="padding:6px 12px; background:#fff3e0; color:#d32f2f; border:1px solid #ffb74d; border-radius:6px; cursor:pointer; font-size:12px;">Hapus Area</button>
+          </div>
+        </div>
+        <div id="area-info" style="margin-bottom:24px; font-size:14px; color:#666;"></div>
+
+        <div>
+          <h3 style="margin:0 0 16px 0; font-size:16px; color:#333;">Daftar Item</h3>
+          <div id="items-list" style="margin-bottom:16px;"></div>
+          <div style="display:flex; gap:8px; padding-top:12px; border-top:1px solid #eee;">
+            <input id="new-item-name" placeholder="Nama item baru" style="flex:1; padding:8px 12px; border:1px solid #ddd; border-radius:6px; font-size:14px;" />
+            <button id="add-item-btn" class="project-action-btn secondary" style="padding:8px 16px; background:#ffa500; color:#fff; border:0; border-radius:6px; cursor:pointer; font-weight:600; font-size:14px;">Tambah Item</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Modal Edit Area -->
+      <div id="edit-area-modal" class="modal-overlay" aria-hidden="true" style="display:none;">
+        <div class="modal-floating" role="dialog" aria-modal="true" aria-labelledby="edit-area-title">
+          <h3 id="edit-area-title" style="margin:0 0 18px 0; color:#333; font-size:18px;">Edit Area</h3>
+          <form id="edit-area-form">
+            <div class="form-row">
+              <input type="text" id="edit-area-name" placeholder="Nama Area" required style="padding:8px 12px; width:100%; border:1px solid #ddd; border-radius:6px; font-size:14px;">
+            </div>
+            <div class="modal-actions" style="display:flex; gap:8px; margin-top:18px;">
+              <button type="button" class="btn cancel" id="cancel-edit-area-btn" style="flex:1; padding:8px 0; background:#f5f5f5; color:#333; border:1px solid #ddd; border-radius:6px; cursor:pointer; font-weight:600;">Batal</button>
+              <button type="submit" class="btn primary" style="flex:1; padding:8px 0; background:#ffa500; color:#fff; border:0; border-radius:6px; cursor:pointer; font-weight:600;">Simpan</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal Tambah Area Baru -->
+      <div id="add-area-new-modal" class="modal-overlay" aria-hidden="true" style="display:none;">
+        <div class="modal-floating" role="dialog" aria-modal="true" aria-labelledby="add-area-new-title">
+          <h3 id="add-area-new-title" style="margin:0 0 18px 0; color:#333; font-size:18px;">Tambah Area Baru</h3>
+          <form id="add-area-new-form">
+            <div class="form-row">
+              <input type="text" id="new-area-name" placeholder="Nama Area Baru" required style="padding:8px 12px; width:100%; border:1px solid #ddd; border-radius:6px; font-size:14px;">
+            </div>
+            <div class="modal-actions" style="display:flex; gap:8px; margin-top:18px;">
+              <button type="button" class="btn cancel" id="cancel-add-area-new-btn" style="flex:1; padding:8px 0; background:#f5f5f5; color:#333; border:1px solid #ddd; border-radius:6px; cursor:pointer; font-weight:600;">Batal</button>
+              <button type="submit" class="btn primary" style="flex:1; padding:8px 0; background:#ffa500; color:#fff; border:0; border-radius:6px; cursor:pointer; font-weight:600;">Tambah</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    // admin check: only these usernames may add/edit/delete
+    function isAdminUser(){ try{ const cur = localStorage.getItem('kans_current'); return cur === 'admin' || cur === 'admin2'; }catch(e){ return false; } }
+    function getQueryParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+    const current = localStorage.getItem('kans_current_project') || getQueryParam('name');
+
+    const titleEl = document.getElementById('project-title');
+    const infoEl = document.getElementById('project-info');
+
+    // Modal and area management utilities
+    function openModal(modal){ if(modal){ modal.style.display='flex'; modal.setAttribute('aria-hidden','false'); const first=modal.querySelector('input'); if(first)first.focus(); } }
+    function closeModal(modal){ if(modal){ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); } }
+
+    let currentAreaName = null;
+
+    if (!current) {
+      titleEl.textContent = 'Tidak ada project terpilih';
+      infoEl.innerHTML = '<p style="color:#999;">Silakan pilih atau buat project dari halaman utama.</p>';
+    } else {
+      titleEl.textContent = current;
+      const projects = JSON.parse(localStorage.getItem('kans_projects') || '[]');
+      const p = projects.find(x => x.name === current);
+      if (p) {
+        infoEl.innerHTML = `<p><strong>Periode:</strong> ${p.period || '-'} </p>`;
+      } else {
+        infoEl.innerHTML = '<p><strong>Periode:</strong> -</p>';
+      }
+
+      // Render areas list
+      function renderAreasList() {
+        const map = JSON.parse(localStorage.getItem('kans_project_areas') || '{}');
+        const areaList = map[current] || [];
+        const areasListEl = document.getElementById('areas-list');
+        
+        if (areaList.length === 0) {
+          areasListEl.innerHTML = '<p style="color:#999; grid-column:1/-1;">Belum ada area. Klik tombol "Tambah Area" untuk membuat area baru.</p>';
+        } else {
+          areasListEl.innerHTML = '';
+          areaList.forEach(area => {
+            // Calculate progress for this area
+            let totalRealisasi = 0;
+            let countRealisasi = 0;
+            if(Array.isArray(area.items)) {
+              area.items.forEach(it => {
+                const realisasi = (it.volume && it.terkirim) ? ((parseFloat(it.terkirim) / parseFloat(it.volume)) * 100) : null;
+                if(realisasi !== null) { totalRealisasi += realisasi; countRealisasi++; }
+              });
+            }
+            const avgRealisasi = countRealisasi > 0 ? Math.round(totalRealisasi / countRealisasi) : 0;
+            
+            const card = document.createElement('a');
+            card.className = 'area-card-detail';
+            card.href = 'area-detail.html?project=' + encodeURIComponent(current) + '&area=' + encodeURIComponent(area.name);
+            
+            card.onclick = function(e) {
+              try { 
+                localStorage.setItem('kans_current_project', current); 
+                localStorage.setItem('kans_current_area', area.name); 
+              } catch(e) {}
+            };
+            
+            card.innerHTML = `
+              <div class="area-card-detail-content">
+                <h3 class="area-card-detail-title">${area.name}</h3>
+                <p class="area-card-detail-count">📦 Items: ${area.items.length}</p>
+              </div>
+              <div class="area-card-detail-progress">
+                <span class="area-card-detail-progress-label">Realisasi: ${avgRealisasi}%</span>
+                <div class="area-card-detail-progress-bar">
+                  <div class="area-card-detail-progress-fill" style="width: ${avgRealisasi}%;"></div>
+                </div>
+              </div>
+            `;
+            
+            areasListEl.appendChild(card);
+          });
+        }
+      }
+
+      function selectArea(areaName) {
+        currentAreaName = areaName;
+        const detailSection = document.getElementById('area-detail-section');
+        const detailTitle = document.getElementById('area-detail-title');
+        const areaInfoEl = document.getElementById('area-info');
+        const itemsEl = document.getElementById('items-list');
+        
+        detailTitle.textContent = areaName + ' — ' + current;
+        
+        const map = JSON.parse(localStorage.getItem('kans_project_areas') || '{}');
+        const areaList = map[current] || [];
+        const areaObj = areaList.find(a => a.name === areaName);
+        
+        if (areaObj) {
+          areaInfoEl.innerHTML = `<p><strong>Jumlah item:</strong> ${areaObj.items.length}</p>`;
+          
+          function renderItems() {
+            itemsEl.innerHTML = areaObj.items.length === 0 
+              ? '<p style="color:#999;">Belum ada item.</p>' 
+              : '<ul>' + areaObj.items.map(it => `<li>${it} <button data-item="${it}" class="remove-item" style="margin-left:8px; padding: 4px 8px; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Hapus</button></li>`).join('') + '</ul>';
+            itemsEl.querySelectorAll('.remove-item').forEach(btn => {
+              btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if(!isAdminUser()){ alert('Akses ditolak: hanya admin yang dapat menghapus item.'); return; }
+                const itemName = this.getAttribute('data-item');
+                const idx = areaObj.items.indexOf(itemName);
+                if (idx >= 0) {
+                  areaObj.items.splice(idx, 1);
+                  map[current] = areaList;
+                  localStorage.setItem('kans_project_areas', JSON.stringify(map));
+                  renderItems();
+                  areaInfoEl.innerHTML = `<p><strong>Jumlah item:</strong> ${areaObj.items.length}</p>`;
+                }
+              });
+            });
+          }
+          renderItems();
+        }
+        
+        detailSection.style.display = 'block';
+        detailSection.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      window.selectArea = selectArea;
+
+      // Initialize areas list on load
+      renderAreasList();
+    }
+
+    // Initialize area link and edit handlers
+    (function setupControls(){
+
+      // Project dropdown menu toggle
+      const menuBtn = document.getElementById('project-menu-btn');
+      const menuEl = document.getElementById('project-menu');
+      function closeProjectMenu(){ if(menuEl){ menuEl.style.display='none'; menuBtn && menuBtn.setAttribute('aria-expanded','false'); } }
+      function openProjectMenu(){ if(menuEl){ menuEl.style.display='block'; menuBtn && menuBtn.setAttribute('aria-expanded','true'); } }
+      if(menuBtn){
+        menuBtn.addEventListener('click', function(e){
+          e.stopPropagation();
+          if(!menuEl) return;
+          if(menuEl.style.display === 'block') closeProjectMenu(); else openProjectMenu();
+        });
+      }
+      // close on outside click or escape
+      document.addEventListener('click', function(){ closeProjectMenu(); });
+      document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeProjectMenu(); });
+
+      const editBtn = document.getElementById('edit-project-btn');
+      const editForm = document.getElementById('project-edit-form');
+      const editName = document.getElementById('edit-project-name');
+      const editPeriod = document.getElementById('edit-project-period');
+      const saveBtn = document.getElementById('save-project-btn');
+      const cancelBtn = document.getElementById('cancel-edit-btn');
+
+      function enterEdit(){
+        if(editForm && editName && editPeriod){
+          editForm.style.display = 'block';
+          editName.value = current;
+          const projects = JSON.parse(localStorage.getItem('kans_projects') || '[]');
+          const p = projects.find(x => x.name === current) || {};
+          editPeriod.value = p.period || '';
+        }
+      }
+      function exitEdit(){ if(editForm) editForm.style.display = 'none'; }
+
+      if(editBtn) editBtn.addEventListener('click', function(){ enterEdit(); });
+      if(cancelBtn) cancelBtn.addEventListener('click', function(){ exitEdit(); });
+
+      if(saveBtn){
+        saveBtn.addEventListener('click', function(){
+          if(!isAdminUser()){ alert('Akses ditolak: hanya admin yang dapat mengubah project.'); return; }
+          const newName = (editName.value || '').trim();
+          const newPeriod = (editPeriod.value || '').trim();
+          if(!newName) { alert('Nama project tidak boleh kosong'); return; }
+
+          if(window.useServer){
+            // find project id by name then call API
+            fetch('/api/projects').then(r=>r.json()).then(data=>{
+              const proj = data.projects && data.projects.find(p=>p.name === current);
+              if(!proj) return alert('Project tidak ditemukan di server');
+              fetch(`/api/projects/${proj.id}`, { method: 'PUT', headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + (localStorage.getItem('kans_token')||'') }, body: JSON.stringify({ name: newName, period: newPeriod }) })
+              .then(r=>r.json()).then(resp=>{
+                if(resp && resp.success){
+                  localStorage.setItem('kans_current_project', resp.project.name);
+                  titleEl.textContent = resp.project.name;
+                  infoEl.innerHTML = `<p><strong>Periode:</strong> ${resp.project.period || '-'}</p>`;
+                  exitEdit();
+                  alert('Perubahan disimpan.');
+                } else alert('Gagal menyimpan: ' + (resp && resp.message ? resp.message : 'unknown'));
+              }).catch(err=>alert('Gagal menyimpan: ' + err.message));
+            }).catch(()=>alert('Gagal mengakses server'));
+            return;
+          }
+
+          // fallback: localStorage behavior
+          const projects = JSON.parse(localStorage.getItem('kans_projects') || '[]');
+          const idx = projects.findIndex(x => x.name === current);
+          if(idx >= 0){ projects[idx].name = newName; projects[idx].period = newPeriod; }
+          else { projects.push({ name: newName, period: newPeriod }); }
+          localStorage.setItem('kans_projects', JSON.stringify(projects));
+
+          const shipments = JSON.parse(localStorage.getItem('kans_shipments') || '[]');
+          let changed = false;
+          shipments.forEach(s => { if(s.project === current){ s.project = newName; changed = true; } });
+          if(changed) localStorage.setItem('kans_shipments', JSON.stringify(shipments));
+
+          try {
+            if (newName !== current) {
+              const map = JSON.parse(localStorage.getItem('kans_project_areas') || '{}');
+              if (map[current]) {
+                if (!map[newName]) {
+                  map[newName] = map[current];
+                } else {
+                  const target = map[newName];
+                  map[current].forEach(oldArea => { if (!target.find(a => a.name === oldArea.name)) target.push(oldArea); });
+                }
+                delete map[current];
+                localStorage.setItem('kans_project_areas', JSON.stringify(map));
+              }
+            }
+          } catch (e) {}
+
+          localStorage.setItem('kans_current_project', newName);
+          titleEl.textContent = newName;
+          infoEl.innerHTML = `<p><strong>Periode:</strong> ${newPeriod || '-'}</p>`;
+          exitEdit();
+          alert('Perubahan disimpan.');
+        });
+      }
+      // Delete project handler
+      const deleteBtn = document.getElementById('delete-project-btn');
+      if(deleteBtn){
+        deleteBtn.addEventListener('click', function(){
+          if(!isAdminUser()){ alert('Akses ditolak: hanya admin yang dapat menghapus project.'); return; }
+          closeProjectMenu();
+          const confirmed = confirm('Anda yakin ingin menghapus project "' + (localStorage.getItem('kans_current_project') || current) + '" beserta semua data terkait?');
+          if(!confirmed) return;
+          const curName = localStorage.getItem('kans_current_project') || current;
+          if(window.useServer){
+            // find project id and call DELETE
+            fetch('/api/projects').then(r=>r.json()).then(data=>{
+              const proj = data.projects && data.projects.find(p=>p.name===curName);
+              if(!proj) return alert('Project tidak ditemukan di server');
+              fetch(`/api/projects/${proj.id}`, { method:'DELETE', headers: { Authorization: 'Bearer ' + (localStorage.getItem('kans_token')||'') } })
+              .then(r=>r.json()).then(resp=>{
+                if(resp && resp.success){ alert('Project dan data terkait berhasil dihapus.'); window.location.href='Front.html'; }
+                else alert('Gagal menghapus: ' + (resp && resp.message ? resp.message : 'unknown'));
+              }).catch(err=>alert('Gagal menghapus: ' + err.message));
+            }).catch(()=>alert('Gagal mengakses server'));
+            return;
+          }
+          // fallback localStorage deletion
+          const projects = JSON.parse(localStorage.getItem('kans_projects') || '[]');
+          const newProjects = projects.filter(p => p.name !== curName);
+          localStorage.setItem('kans_projects', JSON.stringify(newProjects));
+          const shipments = JSON.parse(localStorage.getItem('kans_shipments') || '[]');
+          const remaining = shipments.filter(s => s.project !== curName);
+          localStorage.setItem('kans_shipments', JSON.stringify(remaining));
+          try{ const map = JSON.parse(localStorage.getItem('kans_project_areas') || '{}'); if(map[curName]){ delete map[curName]; localStorage.setItem('kans_project_areas', JSON.stringify(map)); } }catch(e){}
+          try{ if(localStorage.getItem('kans_current_project') === curName) localStorage.removeItem('kans_current_project'); }catch(e){}
+          alert('Project dan data terkait berhasil dihapus.');
+          window.location.href = 'Front.html';
+        });
+      }
+
+        // Area management handlers
+        const addAreaBtn = document.getElementById('add-area-from-menu-btn');
+        const editAreaBtn = document.getElementById('edit-area-btn');
+        const deleteAreaBtn = document.getElementById('delete-area-btn');
+        const addItemBtn = document.getElementById('add-item-btn');
+        const newItemInput = document.getElementById('new-item-name');
+        const editAreaModal = document.getElementById('edit-area-modal');
+        const editAreaForm = document.getElementById('edit-area-form');
+        const cancelEditAreaBtn = document.getElementById('cancel-edit-area-btn');
+        const editAreaNameInput = document.getElementById('edit-area-name');
+        const addAreaNewModal = document.getElementById('add-area-new-modal');
+        const addAreaNewForm = document.getElementById('add-area-new-form');
+        const cancelAddAreaNewBtn = document.getElementById('cancel-add-area-new-btn');
+        const newAreaNameInput = document.getElementById('new-area-name');
+
+        if (addAreaBtn) {
+          addAreaBtn.addEventListener('click', function() { if(!isAdminUser()){ alert('Akses ditolak: hanya admin yang dapat menambah area.'); return; } openModal(addAreaNewModal); });
+        }
+
+        if (editAreaBtn) {
+          editAreaBtn.addEventListener('click', function() {
+            if(!isAdminUser()){ alert('Akses ditolak: hanya admin yang dapat mengubah area.'); return; }
+            if (!currentAreaName) { alert('Pilih area terlebih dahulu'); return; }
+            openModal(editAreaModal);
+            editAreaNameInput.value = currentAreaName;
+          });
+        }
+
+        if (deleteAreaBtn) {
+          deleteAreaBtn.addEventListener('click', function() {
+            if(!isAdminUser()){ alert('Akses ditolak: hanya admin yang dapat menghapus area.'); return; }
+            if (!currentAreaName) { alert('Pilih area terlebih dahulu'); return; }
+            if (!confirm('Hapus area "' + currentAreaName + '" dari project "' + current + '"?')) return;
+            const map = JSON.parse(localStorage.getItem('kans_project_areas') || '{}');
+            const areaList = map[current] || [];
+            const idx = areaList.findIndex(a => a.name === currentAreaName);
+            if (idx >= 0) {
+              areaList.splice(idx, 1);
+              map[current] = areaList;
+              localStorage.setItem('kans_project_areas', JSON.stringify(map));
+              document.getElementById('area-detail-section').style.display = 'none';
+              currentAreaName = null;
+              renderAreasList();
+              alert('Area dihapus');
+            }
+          });
+        }
+
+        if (addItemBtn) {
+          addItemBtn.addEventListener('click', function() {
+            if(!isAdminUser()){ alert('Akses ditolak: hanya admin yang dapat menambah item.'); return; }
+            if (!currentAreaName) { alert('Pilih area terlebih dahulu'); return; }
+            const v = (newItemInput.value || '').trim();
+            if (!v) { alert('Isi nama item'); return; }
+            const map = JSON.parse(localStorage.getItem('kans_project_areas') || '{}');
+            const areaList = map[current] || [];
+            const areaObj = areaList.find(a => a.name === currentAreaName);
+            if (areaObj) {
+              areaObj.items.push(v);
+              map[current] = areaList;
+              localStorage.setItem('kans_project_areas', JSON.stringify(map));
+              newItemInput.value = '';
+              selectArea(currentAreaName);
+            }
+          });
+        }
+
+        if (cancelEditAreaBtn) cancelEditAreaBtn.addEventListener('click', function() { closeModal(editAreaModal); });
+        if (editAreaForm) {
+          editAreaForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newName = (editAreaNameInput.value || '').trim();
+            if (!newName) { alert('Nama area tidak boleh kosong'); return; }
+            if (newName === currentAreaName) { closeModal(editAreaModal); return; }
+            const map = JSON.parse(localStorage.getItem('kans_project_areas') || '{}');
+            const areaList = map[current] || [];
+            const idx = areaList.findIndex(a => a.name === currentAreaName);
+            if (idx >= 0) {
+              areaList[idx].name = newName;
+              map[current] = areaList;
+              localStorage.setItem('kans_project_areas', JSON.stringify(map));
+              alert('Area diubah menjadi "' + newName + '"');
+              currentAreaName = newName;
+              selectArea(newName);
+              closeModal(editAreaModal);
+            }
+          });
+        }
+
+        if (cancelAddAreaNewBtn) cancelAddAreaNewBtn.addEventListener('click', function() { closeModal(addAreaNewModal); });
+        if (addAreaNewForm) {
+          addAreaNewForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newAreaName = (newAreaNameInput.value || '').trim();
+            if (!newAreaName) { alert('Nama area tidak boleh kosong'); return; }
+            if(window.useServer){
+              // find project id then call API
+              fetch('/api/projects').then(r=>r.json()).then(data=>{
+                const proj = data.projects && data.projects.find(p=>p.name === current);
+                if(!proj) return alert('Project tidak ditemukan di server');
+                fetch(`/api/projects/${proj.id}/areas`, { method:'POST', headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + (localStorage.getItem('kans_token')||'') }, body: JSON.stringify({ name: newAreaName }) })
+                .then(r=>r.json()).then(resp=>{
+                  if(resp && resp.success){ alert('Area baru berhasil ditambahkan'); addAreaNewForm.reset(); closeModal(addAreaNewModal); renderAreasList(); selectArea(newAreaName); }
+                  else alert('Gagal menambah area: ' + (resp && resp.message ? resp.message : 'unknown'));
+                }).catch(err=>alert('Gagal menambah area: ' + err.message));
+              }).catch(()=>alert('Gagal mengakses server'));
+              return;
+            }
+            const map = JSON.parse(localStorage.getItem('kans_project_areas') || '{}');
+            const areaList = map[current] || [];
+            if (areaList.find(a => a.name === newAreaName)) { alert('Area dengan nama ini sudah ada'); return; }
+            areaList.push({ name: newAreaName, items: [] });
+            map[current] = areaList;
+            localStorage.setItem('kans_project_areas', JSON.stringify(map));
+            alert('Area baru berhasil ditambahkan');
+            addAreaNewForm.reset();
+            closeModal(addAreaNewModal);
+            renderAreasList();
+            selectArea(newAreaName);
+          });
+        }
+
+        if (editAreaModal) editAreaModal.addEventListener('click', function(e) { if (e.target === editAreaModal) closeModal(editAreaModal); });
+        if (addAreaNewModal) addAreaNewModal.addEventListener('click', function(e) { if (e.target === addAreaNewModal) closeModal(addAreaNewModal); });
+    })();
+  </script>
+</body>
+</html>
