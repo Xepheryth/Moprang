@@ -199,6 +199,9 @@
 
     const projectName = getQueryParam('project') || localStorage.getItem('kans_current_project');
     const areaName = getQueryParam('area') || localStorage.getItem('kans_current_area');
+    
+    // Declare areaObj at this scope so it's accessible to all functions
+    let areaObj = null;
 
     const titleEl = document.getElementById('area-title');
     const infoEl = document.getElementById('area-info');
@@ -227,7 +230,7 @@
       const areaList = map[projectName] || [];
       console.log('Looking for area:', areaName, 'in project:', projectName);
       console.log('Available areas:', areaList.map(a => a.name));
-      const areaObj = areaList.find(a=>a.name===areaName);
+      areaObj = areaList.find(a=>a.name===areaName);
       if(!areaObj){
         infoEl.innerHTML = '<p style="color:#999;">Area tidak ditemukan. Data: ' + JSON.stringify({projectName, areaName, areaListCount: areaList.length}) + '</p>';
         console.error('Area object not found:', {projectName, areaName, areaListCount: areaList.length});
