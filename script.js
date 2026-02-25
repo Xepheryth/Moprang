@@ -164,23 +164,42 @@ function renderProjectAreaDropdown() {
 // Render area cards for a project index
 function renderAreaCards(projectIdx) {
     const container = document.getElementById('areas-container');
-    if (!container) return;
+    if (!container) {
+        console.error('areas-container element not found!');
+        return;
+    }
     container.innerHTML = '';
     const projects = getProjectList();
-    if (!projects[projectIdx]) {
+    
+    console.log('renderAreaCards called with projectIdx:', projectIdx);
+    console.log('Total projects:', projects.length);
+    
+    if (!projects || !projects[projectIdx]) {
+        console.warn('Invalid projectIdx:', projectIdx, 'Available projects:', projects.length);
         container.innerHTML = '<p style="color:#999;">Pilih project terlebih dahulu.</p>';
         return;
     }
+    
     const projectName = projects[projectIdx].name;
+    console.log('Rendering areas for project:', projectName);
+    
     const map = getProjectAreasMap();
     let areas = map[projectName] || [];
+    
+    console.log('Areas found for project "' + projectName + '":', areas.length);
+    
     if (areas.length === 0) {
         // Jika belum ada area, buat satu area default agar UI menampilkan area langsung
         const defaultAreaName = 'Umum';
+        console.log('No areas found, creating default area:', defaultAreaName);
         areas = [{ name: defaultAreaName, items: [] }];
         map[projectName] = areas;
         setProjectAreasMap(map);
+        console.log('✓ Default area created and saved to localStorage');
     }
+    
+    console.log('About to render', areas.length, 'area cards');
+    
     areas.forEach((area, idx) => {
         // Calculate realisasi percentage for this area
         let totalRealisasi = 0;
@@ -228,6 +247,7 @@ function renderAreaCards(projectIdx) {
         });
 
         container.appendChild(card);
+        console.log('✓ Area card rendered for:', area.name);
 
         // Edit handler
         const editBtn = card.querySelector('.edit-area-btn');
@@ -776,17 +796,41 @@ setTimeout(function handleQueryOnLoad(){
         const params = new URLSearchParams(window.location.search);
         const open = params.get('open');
         const projectName = params.get('project') || params.get('name');
+        console.log('handleQueryOnLoad running - open:', open, 'projectName:', projectName);
+        
         if(open === 'areas' && projectName){
             // ensure project dropdown is populated
             renderProjectAreaDropdown();
+            console.log('✓ Project dropdown rendered');
+            
             // find index of project
-            const projects = JSON.parse(localStorage.getItem('kans_projects') || '[]');
+            const projects = getProjectList();
+            console.log('Projects in localStorage:', projects.map(p => p.name));
+            
             const idx = projects.findIndex(p => p.name === projectName);
+            console.log('Found project "' + projectName + '" at index:', idx);
+            
             if(idx >= 0){
                 showPage('areas');
+                console.log('✓ Areas page shown');
+                
                 const sel = document.getElementById('project-select-area');
-                if(sel){ sel.value = idx; renderAreaCards(idx); }
+                if(sel){ 
+                    sel.value = idx; 
+                    console.log('✓ Dropdown value set to:', idx);
+                    console.log('✓ Calling renderAreaCards with index:', idx);
+                    renderAreaCards(idx); 
+                } else {
+                    console.warn('project-select-area element not found');
+                }
+            } else {
+                console.warn('Project "' + projectName + '" not found in projects list');
+                // Fallback: show the areas page anyway
+                showPage('areas');
+                renderProjectAreaDropdown();
             }
         }
-    }catch(e){/* ignore */}
+    }catch(e){
+        console.error('Error in handleQueryOnLoad:', e);
+    }
 }, 100);
