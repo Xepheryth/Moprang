@@ -525,9 +525,10 @@ document.addEventListener('DOMContentLoaded', function(){
             if(!map[projectName]) map[projectName] = [];
             map[projectName].push({ name: areaName.trim(), items: [] });
             setProjectAreasMap(map);
-            renderAreaCards(projIdx);
             addAreaForm.reset();
             closeModal(addAreaModal);
+            // Redirect langsung ke detail area
+            window.location.href = 'area-detail.html?project=' + encodeURIComponent(projectName) + '&area=' + encodeURIComponent(areaName.trim());
         });
     }
 

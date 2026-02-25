@@ -329,9 +329,15 @@
 
         function updateAddItemSectionVisibility() {
           const addItemSection = document.getElementById('add-item-section');
-          const hasItems = areaObj.items && areaObj.items.length > 0;
-          if (addItemSection) {
-            addItemSection.style.display = hasItems ? 'flex' : 'none';
+          if (!addItemSection) return;
+          
+          const hasItems = areaObj && areaObj.items && Array.isArray(areaObj.items) && areaObj.items.length > 0;
+          
+          // Hide form when no items, show when items exist
+          if (hasItems) {
+            addItemSection.style.display = 'flex';
+          } else {
+            addItemSection.style.display = 'none';
           }
         }
 
@@ -469,8 +475,10 @@
             });
           });
         }
+        
+        // Initialize visibility of add-item section based on items count
+        updateAddItemSectionVisibility();
         renderItemsAndUpdateFilter();
-        populateSupplierDropdown();
 
         addItemBtn.addEventListener('click', function(){
           if(!isAdminUser()){ alert('Akses ditolak: hanya admin yang dapat menambah item.'); return; }
