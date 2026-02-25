@@ -493,12 +493,23 @@ document.querySelectorAll('.nav-link').forEach(link => {
 
 // Setup event listeners for Areas page controls if present
 document.addEventListener('DOMContentLoaded', function(){
+    console.log('=== DOMContentLoaded started ===');
+    
     const projectSelectArea = document.getElementById('project-select-area');
     const addAreaBtn = document.getElementById('add-area-btn');
     const addAreaModal = document.getElementById('add-area-modal');
     const addAreaForm = document.getElementById('add-area-form');
     const addAreaCancel = document.getElementById('add-area-cancel');
     const areasContainer = document.getElementById('areas-container');
+    
+    console.log('Form elements found:', {
+        projectSelectArea: !!projectSelectArea,
+        addAreaBtn: !!addAreaBtn,
+        addAreaModal: !!addAreaModal,
+        addAreaForm: !!addAreaForm,
+        addAreaCancel: !!addAreaCancel,
+        areasContainer: !!areasContainer
+    });
 
     if(projectSelectArea){
         renderProjectAreaDropdown();
@@ -575,6 +586,8 @@ document.addEventListener('DOMContentLoaded', function(){
     }
     if(addAreaCancel){ addAreaCancel.addEventListener('click', function(){ closeModal(addAreaModal); }); }
     if(addAreaModal){ addAreaModal.addEventListener('click', function(e){ if(e.target===addAreaModal) closeModal(addAreaModal); }); }
+    
+    console.log('=== DOMContentLoaded completed - all listeners attached ===');
 });
 
 // Minimal authentication helpers (no modals) — keep profile UI functional
