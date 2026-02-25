@@ -541,9 +541,28 @@
             }).catch(()=>alert('Gagal mengakses server'));
             return;
           }
-          if(!confirm('Hapus area "' + areaName + '" dari project "' + projectName + '"?')) return;
+          console.log('Delete area button clicked for area:', areaName, 'in project:', projectName);
+          if(!confirm('Hapus area "' + areaName + '" dari project "' + projectName + '"?')) { 
+            console.log('Delete cancelled by user');
+            return; 
+          }
+          console.log('✓ User confirmed deletion');
           const idx = areaList.findIndex(a=>a.name===areaName);
-          if(idx>=0){ areaList.splice(idx,1); map[projectName]=areaList; localStorage.setItem('kans_project_areas', JSON.stringify(map)); alert('Area dihapus'); window.location.href = 'Front.html?open=areas&project=' + encodeURIComponent(projectName); }
+          console.log('Area index in areaList:', idx);
+          if(idx>=0){ 
+            console.log('✓ Splicing area at index', idx);
+            areaList.splice(idx,1); 
+            console.log('✓ After splice, areaList length:', areaList.length);
+            map[projectName]=areaList; 
+            console.log('✓ Updated map[' + projectName + ']:', map[projectName].length, 'areas');
+            localStorage.setItem('kans_project_areas', JSON.stringify(map)); 
+            console.log('✓ Saved to localStorage');
+            alert('Area dihapus'); 
+            console.log('✓ About to redirect to Front.html');
+            window.location.href = 'Front.html?open=areas&project=' + encodeURIComponent(projectName); 
+          } else {
+            console.error('❌ Area "' + areaName + '" not found in areaList!');
+          }
         });
 
         // Edit Area
