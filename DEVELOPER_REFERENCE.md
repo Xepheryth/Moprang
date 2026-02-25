@@ -176,7 +176,7 @@ db.prepare(
 
 ## Authentication UI
 
-Authentication (login/register/reset) now lives in the dedicated `login.html` page instead of in-page modal overlays. See `login.html` for the current IDs and structure used by the client-side auth flow.
+Authentication (login/register/reset) now lives in the dedicated `index.html` page instead of in-page modal overlays. See `index.html` for the current IDs and structure used by the client-side auth flow.
 
 ---
 

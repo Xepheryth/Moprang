@@ -574,7 +574,7 @@ function clearCurrentUser(){
     localStorage.removeItem('kans_current');
     localStorage.removeItem('kans_token');
     renderUserState();
-    try{ window.location.href = 'login.html'; }catch(e){}
+    try{ window.location.href = 'index.html'; }catch(e){}
 }
 
 function loadProfile(){

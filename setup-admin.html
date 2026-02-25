@@ -86,7 +86,7 @@
         users.push({ username, email, password });
         localStorage.setItem('kans_users', JSON.stringify(users));
         
-        showStatus(`✓ Admin account "${username}" berhasil dibuat! Anda bisa login di login.html`, 'success');
+        showStatus(`✓ Admin account "${username}" berhasil dibuat! Anda bisa login di index.html`, 'success');
         document.getElementById('admin-form').reset();
       } catch (err) {
         showStatus('Error: ' + err.message, 'error');

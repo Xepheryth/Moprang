@@ -68,7 +68,7 @@ KANS Web Monitoring/
 ├── Front.html                          # Main frontend
 ├── script.js                           # Frontend logic
 ├── styles.css                          # Styling
-├── login.html, area-detail.html, etc   # Additional pages
+├── index.html, area-detail.html, etc   # Additional pages (index.html is entry point)
 ├── backend/server.js                   # Express server
 ├── backend/package.json                # Node dependencies
 ├── README.md                           # Main documentation

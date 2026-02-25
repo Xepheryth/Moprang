@@ -245,7 +245,7 @@ KANS Web Monitoring/
 ├── Front.html                          # File HTML utama
 ├── script.js                           # Logika JavaScript utama (740+ lines)
 ├── styles.css                          # Styling CSS
-├── login.html                          # Halaman login
+├── index.html                          # Halaman login (entry point)
 ├── area-detail.html                    # Detail area
 ├── project-detail.html                 # Detail project
 ├── setup-admin.html                    # Setup admin
