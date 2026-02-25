@@ -511,6 +511,8 @@ document.addEventListener('DOMContentLoaded', function(){
     if(addAreaForm){
         addAreaForm.addEventListener('submit', function(e){
             e.preventDefault();
+            console.log('Add area form submitted');
+            
             if(!isAdminUser()){
                 alert('Akses ditolak: hanya admin yang dapat menambah area.');
                 return;
@@ -518,17 +520,36 @@ document.addEventListener('DOMContentLoaded', function(){
             const areaName = (document.getElementById('area-name')||{}).value || '';
             const sel = document.getElementById('project-select-area');
             const projIdx = sel ? parseInt(sel.value) : -1;
+            
+            console.log('Area name:', areaName, 'Project index:', projIdx);
+            
             if(!areaName.trim() || projIdx < 0){ alert('Pilih project dan isi nama area'); return; }
             const projects = getProjectList();
             const projectName = projects[projIdx].name;
             const map = getProjectAreasMap();
+            
+            console.log('Adding area to project:', projectName);
+            
             if(!map[projectName]) map[projectName] = [];
             map[projectName].push({ name: areaName.trim(), items: [] });
             setProjectAreasMap(map);
+            
+            console.log('Area saved to localStorage');
+            
             addAreaForm.reset();
+            
+            // Build URL and redirect
+            const redirectUrl = 'area-detail.html?project=' + encodeURIComponent(projectName) + '&area=' + encodeURIComponent(areaName.trim());
+            console.log('Redirect URL:', redirectUrl);
+            console.log('Will redirect in 100ms...');
+            
             closeModal(addAreaModal);
-            // Redirect langsung ke detail area
-            window.location.href = 'area-detail.html?project=' + encodeURIComponent(projectName) + '&area=' + encodeURIComponent(areaName.trim());
+            
+            // Use setTimeout to ensure everything is processed before redirect
+            setTimeout(function() {
+                console.log('Executing redirect to:', redirectUrl);
+                window.location.href = redirectUrl;
+            }, 100);
         });
     }
 

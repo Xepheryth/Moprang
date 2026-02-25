@@ -220,13 +220,17 @@
     if(!projectName || !areaName){
       titleEl.textContent = 'Data tidak lengkap';
       infoEl.innerHTML = '<p style="color:#999;">Project atau Area tidak ditentukan.</p>';
+      console.error('Area detail error: projectName=' + projectName + ', areaName=' + areaName);
     } else {
       titleEl.textContent = areaName + ' — ' + projectName;
       const map = JSON.parse(localStorage.getItem('kans_project_areas') || '{}');
       const areaList = map[projectName] || [];
+      console.log('Looking for area:', areaName, 'in project:', projectName);
+      console.log('Available areas:', areaList.map(a => a.name));
       const areaObj = areaList.find(a=>a.name===areaName);
       if(!areaObj){
-        infoEl.innerHTML = '<p style="color:#999;">Area tidak ditemukan.</p>';
+        infoEl.innerHTML = '<p style="color:#999;">Area tidak ditemukan. Data: ' + JSON.stringify({projectName, areaName, areaListCount: areaList.length}) + '</p>';
+        console.error('Area object not found:', {projectName, areaName, areaListCount: areaList.length});
       } else {
         // normalize old items (strings) to object shape {name,volume,unit,terkirim,realisasi,status}
         try{
