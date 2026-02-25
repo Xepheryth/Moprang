@@ -334,24 +334,12 @@
           }
         }
 
-        function updateAddItemSectionVisibility() {
-          const addItemSection = document.getElementById('add-item-section');
-          if (!addItemSection) return;
-          
-          const hasItems = areaObj && areaObj.items && Array.isArray(areaObj.items) && areaObj.items.length > 0;
-          
-          // Hide form when no items, show when items exist
-          if (hasItems) {
-            addItemSection.style.display = 'flex';
-          } else {
-            addItemSection.style.display = 'none';
-          }
-        }
+        // Removed: Form "Daftar Item" is now always visible
+        // Previously hidden when area had no items, now always shown for user convenience
 
         function renderItemsAndUpdateFilter() {
           renderItems();
           populateSupplierDropdown();
-          updateAddItemSectionVisibility();
         }
 
         if(supplierFilterEl) {
@@ -483,8 +471,6 @@
           });
         }
         
-        // Initialize visibility of add-item section based on items count
-        updateAddItemSectionVisibility();
         renderItemsAndUpdateFilter();
 
         addItemBtn.addEventListener('click', function(){
