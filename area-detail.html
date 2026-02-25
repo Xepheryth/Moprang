@@ -46,7 +46,7 @@
           </div>
         </div>
         <div id="items-list" style="margin-top:8px;"></div>
-        <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+        <div id="add-item-section" style="margin-top:12px; display:flex; gap:8px; align-items:center;">
           <input id="new-item-name" placeholder="Nama item baru" style="padding:8px; width:40%; border:1px solid #ddd; border-radius:4px;" />
           <input id="new-item-volume" placeholder="Volume" style="padding:8px; width:20%; border:1px solid #ddd; border-radius:4px; text-align:right;" />
           <input id="new-item-unit" placeholder="Satuan" style="padding:8px; width:20%; border:1px solid #ddd; border-radius:4px;" />
@@ -327,9 +327,18 @@
           }
         }
 
+        function updateAddItemSectionVisibility() {
+          const addItemSection = document.getElementById('add-item-section');
+          const hasItems = areaObj.items && areaObj.items.length > 0;
+          if (addItemSection) {
+            addItemSection.style.display = hasItems ? 'flex' : 'none';
+          }
+        }
+
         function renderItemsAndUpdateFilter() {
           renderItems();
           populateSupplierDropdown();
+          updateAddItemSectionVisibility();
         }
 
         if(supplierFilterEl) {
