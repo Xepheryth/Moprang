@@ -263,7 +263,7 @@ KANS Web Monitoring/
 │   └── README.md                       # Backend documentation
 │
 ├── media/
-│   ├── logo KANS.png                   # Logo aplikasi
+│   ├── logo-kans.png                   # Logo aplikasi
 │   └── [profile photos]/               # Folder untuk foto profil user
 │
 ├── README.md                           # File ini
