@@ -60,6 +60,20 @@
         </div>
         <div class="small-note">Sudah punya akun? <a id="goto-login" class="link-like">Masuk</a></div>
       </div>
+
+      <!-- Email Confirmation Form -->
+      <div id="confirmation-form" class="auth-form">
+        <p style="text-align:center; color:#666; margin-bottom:16px;">
+          Konfirmasi email Anda di bawah. Kode konfirmasi telah dikirim ke email Anda.
+        </p>
+        <div class="form-row">
+          <input type="text" id="conf-code" placeholder="Masukkan 6-digit code" maxlength="6" required>
+        </div>
+        <div class="form-row">
+          <button id="btn-confirm">Konfirmasi Email</button>
+        </div>
+        <div class="small-note">Tidak menerima code? <a id="resend-code" class="link-like">Kirim ulang</a></div>
+      </div>
     </div>
 
     <script>
@@ -73,15 +87,20 @@
       const tabRegister = document.getElementById('tab-register');
       const formLogin = document.getElementById('login-form');
       const formRegister = document.getElementById('register-form');
+      const formConfirmation = document.getElementById('confirmation-form');
       const gotoRegister = document.getElementById('goto-register');
       const gotoLogin = document.getElementById('goto-login');
 
-      function showLogin(){ tabLogin.classList.add('active'); tabRegister.classList.remove('active'); formLogin.classList.add('active'); formRegister.classList.remove('active'); }
-      function showRegister(){ tabRegister.classList.add('active'); tabLogin.classList.remove('active'); formRegister.classList.add('active'); formLogin.classList.remove('active'); }
+      function showLogin(){ tabLogin.classList.add('active'); tabRegister.classList.remove('active'); formLogin.classList.add('active'); formRegister.classList.remove('active'); formConfirmation.classList.remove('active'); }
+      function showRegister(){ tabRegister.classList.add('active'); tabLogin.classList.remove('active'); formRegister.classList.add('active'); formLogin.classList.remove('active'); formConfirmation.classList.remove('active'); }
+      function showConfirmation(){ formConfirmation.classList.add('active'); formLogin.classList.remove('active'); formRegister.classList.remove('active'); tabLogin.classList.remove('active'); tabRegister.classList.remove('active'); }
       tabLogin.addEventListener('click', showLogin);
       tabRegister.addEventListener('click', showRegister);
       gotoRegister.addEventListener('click', showRegister);
       gotoLogin.addEventListener('click', showLogin);
+
+      // Store pending registration for confirmation
+      let pendingConfirmation = { username: '', email: '', password: '', code: '' };
 
       // Local storage helpers
       function getUsersLocal(){ 
@@ -90,8 +109,8 @@
           if (!data) {
             // Initialize with demo account if empty
             const seedUsers = [
-              { username: 'admin', email: 'admin@kans.local', password: 'Admin123' },
-              { username: 'demo', email: 'demo@kans.local', password: 'Demo123456' }
+              { username: 'admin', email: 'admin@kans.local', password: 'Admin123', verified: true, confirmationCode: '' },
+              { username: 'demo', email: 'demo@kans.local', password: 'Demo123456', verified: true, confirmationCode: '' }
             ];
             localStorage.setItem('kans_users', JSON.stringify(seedUsers));
             if(DEBUG) console.log('✓ Initialized with seed accounts:', seedUsers);
@@ -111,6 +130,10 @@
         } catch(e) {
           if(DEBUG) console.error('Error saving users:', e);
         }
+      }
+
+      function generateConfirmationCode(){
+        return Math.floor(100000 + Math.random() * 900000).toString();
       }
 
       async function postJSON(url, body){
@@ -161,9 +184,17 @@
         if(users.find(u=>u.username===username)) {
           return { success:false, message:'Username sudah terdaftar' };
         }
-        users.push({ username, email, password });
+        
+        // Generate confirmation code
+        const confirmationCode = generateConfirmationCode();
+        users.push({ username, email, password, verified: false, confirmationCode });
         saveUsersLocal(users);
-        return { success:true, message:'Registrasi berhasil (mode lokal)' };
+        
+        // Show confirmation form and inform user
+        if(DEBUG) console.log('✓ User registered, confirmation code:', confirmationCode);
+        alert('Registrasi berhasil! Kode konfirmasi telah ditampilkan di layar. Silakan masukkan kode untuk melanjutkan.');
+        
+        return { success:true, message:'Registrasi berhasil, silakan konfirmasi email', code: confirmationCode, username };
       }
 
       async function loginUser(username, password){
@@ -191,6 +222,12 @@
           return { success:false, message: 'Username atau password salah' };
         }
         
+        // Check if email is verified
+        if(!found.verified) {
+          if(DEBUG) console.log('Login failed: email not verified for user:', username);
+          return { success:false, message: 'Email belum dikonfirmasi. Silakan verifikasi email Anda terlebih dahulu.' };
+        }
+        
         if(DEBUG) console.log('✓ Local login successful for:', username);
         return { success:true, message:'Login berhasil (mode lokal)', username };
       }
@@ -203,7 +240,7 @@
         return { ok: true };
       }
 
-      // Register handler (auto-login on success)
+      // Register handler
       document.getElementById('btn-register').addEventListener('click', async function(e){
         e.preventDefault();
         const u = document.getElementById('rg-username').value.trim();
@@ -216,19 +253,75 @@
         if(!pwc.ok){ alert(pwc.msg); return; }
         const res = await registerUser(u, em, p);
         if(res && res.success){
-          // try auto-login after successful registration
-          const loginRes = await loginUser(u, p);
-          if(loginRes && loginRes.success){
-            if(loginRes.token) localStorage.setItem('kans_token', loginRes.token);
-            if(loginRes.role) localStorage.setItem('kans_role', loginRes.role);
-            localStorage.setItem('kans_current', loginRes.username || u);
-            window.location.href = 'Front.html';
-          } else {
-            alert(res.message || 'Registrasi berhasil. Silakan login.');
-            showLogin();
-          }
+          // Store pending confirmation info
+          pendingConfirmation = { username: u, email: em, password: p, code: res.code };
+          
+          // Reset form
+          document.getElementById('rg-username').value = '';
+          document.getElementById('rg-email').value = '';
+          document.getElementById('rg-password').value = '';
+          document.getElementById('rg-password2').value = '';
+          document.getElementById('conf-code').value = '';
+          
+          // Show confirmation form with code (for demo purposes)
+          const codeDisplay = document.createElement('div');
+          codeDisplay.style.cssText = 'padding:12px; margin-bottom:12px; background:#fff3e0; border:1px solid #ffb74d; border-radius:6px; text-align:center;';
+          codeDisplay.innerHTML = '<strong>Kode Konfirmasi Anda:</strong><br><span style="font-size:24px; font-weight:bold; color:#ff6b00; letter-spacing:4px;">' + res.code + '</span>';
+          
+          // Insert code display into confirmation form
+          const confForm = document.getElementById('confirmation-form');
+          const existingDisplay = confForm.querySelector('[id="code-display"]');
+          if(existingDisplay) existingDisplay.remove();
+          
+          const displayDiv = document.createElement('div');
+          displayDiv.id = 'code-display';
+          displayDiv.innerHTML = codeDisplay.innerHTML;
+          displayDiv.style.cssText = codeDisplay.style.cssText;
+          
+          confForm.insertBefore(displayDiv, confForm.firstChild);
+          
+          // Show confirmation form
+          showConfirmation();
+          if(DEBUG) console.log('✓ Showing confirmation form with code:', res.code);
         }
         else { alert(res.message || 'Gagal registrasi'); }
+      });
+
+      // Confirmation handler
+      document.getElementById('btn-confirm').addEventListener('click', function(e){
+        e.preventDefault();
+        const inputCode = document.getElementById('conf-code').value.trim();
+        
+        if(!inputCode){ alert('Masukkan kode konfirmasi'); return; }
+        if(inputCode !== pendingConfirmation.code){ 
+          alert('Kode konfirmasi salah'); 
+          return; 
+        }
+        
+        // Mark user as verified
+        const users = getUsersLocal();
+        const userIdx = users.findIndex(u => u.username === pendingConfirmation.username);
+        if(userIdx >= 0){
+          users[userIdx].verified = true;
+          users[userIdx].confirmationCode = '';
+          saveUsersLocal(users);
+          if(DEBUG) console.log('✓ User email verified:', pendingConfirmation.username);
+        }
+        
+        // Auto-login
+        alert('✓ Email Anda berhasil dikonfirmasi! Anda akan diarahkan ke halaman utama.');
+        localStorage.setItem('kans_current', pendingConfirmation.username);
+        window.location.href = 'Front.html';
+      });
+
+      // Resend code handler
+      document.getElementById('resend-code').addEventListener('click', function(e){
+        e.preventDefault();
+        if(!pendingConfirmation.code){
+          alert('Tidak ada registrasi yang pending');
+          return;
+        }
+        alert('Kode konfirmasi dikirim ulang:\n\n' + pendingConfirmation.code + '\n\nSilakan gunakan kode ini untuk mengonfirmasi email.');
       });
 
       // Login handler
