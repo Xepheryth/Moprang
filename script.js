@@ -405,19 +405,35 @@ if (addProjectForm) {
 
 // Navigasi Halaman
 function showPage(pageId) {
+    console.log('showPage called with:', pageId);
+    
     // Sembunyikan semua halaman
     document.querySelectorAll('.page').forEach(page => {
         page.classList.remove('active');
     });
     
     // Tampilkan halaman yang dipilih
-    document.getElementById(pageId).classList.add('active');
+    const targetPage = document.getElementById(pageId);
+    if(targetPage) {
+        targetPage.classList.add('active');
+        console.log('✓ Page "' + pageId + '" is now active');
+    } else {
+        console.error('Page element with id "' + pageId + '" not found!');
+        return;
+    }
     
-    // Update active nav link
+    // Update active nav link (only if nav link exists)
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
     });
-    document.querySelector(`.nav-link[data-page="${pageId}"]`).classList.add('active');
+    
+    const navLink = document.querySelector(`.nav-link[data-page="${pageId}"]`);
+    if(navLink) {
+        navLink.classList.add('active');
+        console.log('✓ Nav link for page "' + pageId + '" marked as active');
+    } else {
+        console.log('⚠ No nav link found for page "' + pageId + '" (this is OK for query-param loaded pages)');
+    }
 
     // Show/hide add project button based on page
     const addProjectBtn = document.getElementById('add-project-btn');
