@@ -64,7 +64,9 @@
 
     <script>
     (function(){
-      const API_BASE = 'https://localhost:3000/api'; // adjust jika perlu
+      // Use HTTP for localhost, adjust if backend is available
+      const API_BASE = true ? null : 'http://localhost:3000/api'; // Set to null to use localStorage only
+      const DEBUG = true;
 
       // UI tabs
       const tabLogin = document.getElementById('tab-login');
@@ -81,64 +83,116 @@
       gotoRegister.addEventListener('click', showRegister);
       gotoLogin.addEventListener('click', showLogin);
 
-      // Local fallback helpers
-      function getUsersLocal(){ try{ return JSON.parse(localStorage.getItem('kans_users')||'[]'); }catch(e){return []} }
-      function saveUsersLocal(users){ localStorage.setItem('kans_users', JSON.stringify(users)); }
+      // Local storage helpers
+      function getUsersLocal(){ 
+        try{ 
+          const data = localStorage.getItem('kans_users');
+          if (!data) {
+            // Initialize with demo account if empty
+            const seedUsers = [
+              { username: 'admin', email: 'admin@kans.local', password: 'Admin123' },
+              { username: 'demo', email: 'demo@kans.local', password: 'Demo123456' }
+            ];
+            localStorage.setItem('kans_users', JSON.stringify(seedUsers));
+            if(DEBUG) console.log('✓ Initialized with seed accounts:', seedUsers);
+            return seedUsers;
+          }
+          return JSON.parse(data); 
+        }catch(e){
+          if(DEBUG) console.error('Error parsing users:', e);
+          return [];
+        } 
+      }
+      
+      function saveUsersLocal(users){ 
+        try {
+          localStorage.setItem('kans_users', JSON.stringify(users)); 
+          if(DEBUG) console.log('✓ Saved users to localStorage');
+        } catch(e) {
+          if(DEBUG) console.error('Error saving users:', e);
+        }
+      }
 
       async function postJSON(url, body){
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-        return res.json();
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+            timeout: 5000
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+          return res.json();
+        } catch(err) {
+          if(DEBUG) console.error('postJSON error:', err.message);
+          throw err;
+        }
       }
 
       async function registerRemote(username, email, password){
+        if (!API_BASE) throw new Error('Backend not configured');
         const url = `${API_BASE.replace(/\/$/, '')}/register`;
         return postJSON(url, { username, email, password });
       }
+      
       async function loginRemote(username, password){
+        if (!API_BASE) throw new Error('Backend not configured');
         const url = `${API_BASE.replace(/\/$/, '')}/login`;
         return postJSON(url, { username, password });
       }
 
       async function registerUser(username, email, password){
+        if(DEBUG) console.log('Attempting registration for:', username);
+        
+        // Try backend first if configured
         if(API_BASE){
-          try{ const r = await registerRemote(username,email,password); return r; }catch(err){ 
-            console.warn('Backend unavailable, using local storage:', err.message);
-            // Fallback to local
-            const users = getUsersLocal();
-            if(users.find(u=>u.username===username)) return { success:false, message:'Username sudah terdaftar' };
-            users.push({ username, email, password });
-            saveUsersLocal(users);
-            return { success:true, message:'Registrasi berhasil (mode lokal)' };
+          try{ 
+            if(DEBUG) console.log('Trying remote register...');
+            const r = await registerRemote(username,email,password); 
+            if(DEBUG) console.log('Remote register success:', r);
+            return r; 
+          }catch(err){ 
+            if(DEBUG) console.warn('Remote register failed:', err.message, '- fallback to local');
           }
-        } else {
-          const users = getUsersLocal();
-          if(users.find(u=>u.username===username)) return { success:false, message:'Username sudah terdaftar' };
-          users.push({ username, email, password });
-          saveUsersLocal(users);
-          return { success:true, message:'Registrasi berhasil (lokal)'};
         }
+        
+        // Fallback to localStorage
+        const users = getUsersLocal();
+        if(users.find(u=>u.username===username)) {
+          return { success:false, message:'Username sudah terdaftar' };
+        }
+        users.push({ username, email, password });
+        saveUsersLocal(users);
+        return { success:true, message:'Registrasi berhasil (mode lokal)' };
       }
 
       async function loginUser(username, password){
+        if(DEBUG) console.log('Attempting login for:', username);
+        
+        // Try backend first if configured
         if(API_BASE){
-          try{ const r = await loginRemote(username,password); return r; }catch(err){ 
-            console.warn('Backend unavailable, using local storage:', err.message);
-            // Fallback to local
-            const users = getUsersLocal();
-            const found = users.find(u=>u.username===username && u.password===password);
-            if(!found) return { success:false, message: 'Username atau password salah' };
-            return { success:true, message:'Login berhasil (mode lokal)', username };
+          try{ 
+            if(DEBUG) console.log('Trying remote login...');
+            const r = await loginRemote(username,password); 
+            if(DEBUG) console.log('Remote login success:', r);
+            return r; 
+          }catch(err){ 
+            if(DEBUG) console.warn('Remote login failed:', err.message, '- fallback to local');
           }
-        } else {
-          const users = getUsersLocal();
-          const found = users.find(u=>u.username===username && u.password===password);
-          if(!found) return { success:false, message: 'Username atau password salah' };
-          return { success:true, message:'Login berhasil (lokal)', username };
         }
+        
+        // Fallback to localStorage
+        const users = getUsersLocal();
+        if(DEBUG) console.log('Available local users:', users.map(u => u.username));
+        
+        const found = users.find(u=>u.username===username && u.password===password);
+        if(!found) {
+          if(DEBUG) console.log('Login failed: user not found or password mismatch');
+          return { success:false, message: 'Username atau password salah' };
+        }
+        
+        if(DEBUG) console.log('✓ Local login successful for:', username);
+        return { success:true, message:'Login berhasil (mode lokal)', username };
       }
 
       function validatePasswordStrength(password){
@@ -190,7 +244,7 @@
           localStorage.setItem('kans_current', res.username || u);
           window.location.href = 'Front.html';
         } else {
-          alert(res.message || 'Login gagal');
+          alert(res.message || 'Login gagal. Silakan cek console untuk detail.');
         }
       });
 
@@ -200,6 +254,9 @@
           window.location.href = 'Front.html';
         }
       }catch(e){}
+      
+      // Initialize seed data on first load
+      if(DEBUG) console.log('KANS Login System initialized. Demo accounts created if needed.');
     })();
     </script>
   </body>
