@@ -511,45 +511,62 @@ document.addEventListener('DOMContentLoaded', function(){
     if(addAreaForm){
         addAreaForm.addEventListener('submit', function(e){
             e.preventDefault();
-            console.log('Add area form submitted');
+            console.log('✓ Add area form submitted');
             
             if(!isAdminUser()){
                 alert('Akses ditolak: hanya admin yang dapat menambah area.');
                 return;
             }
-            const areaName = (document.getElementById('area-name')||{}).value || '';
+            
+            const areaNameInput = document.getElementById('area-name');
+            const areaName = areaNameInput ? areaNameInput.value.trim() : '';
             const sel = document.getElementById('project-select-area');
             const projIdx = sel ? parseInt(sel.value) : -1;
             
-            console.log('Area name:', areaName, 'Project index:', projIdx);
+            console.log('Form data:', {areaName, projIdx, selValue: sel ? sel.value : 'N/A'});
             
-            if(!areaName.trim() || projIdx < 0){ alert('Pilih project dan isi nama area'); return; }
+            if(!areaName || projIdx < 0){ 
+                alert('Pilih project dan isi nama area'); 
+                return; 
+            }
+            
             const projects = getProjectList();
+            if(!projects || projIdx >= projects.length){
+                alert('Project tidak valid');
+                return;
+            }
+            
             const projectName = projects[projIdx].name;
+            console.log('✓ Project selected:', projectName);
+            
             const map = getProjectAreasMap();
-            
-            console.log('Adding area to project:', projectName);
-            
             if(!map[projectName]) map[projectName] = [];
-            map[projectName].push({ name: areaName.trim(), items: [] });
+            
+            // Check if area already exists
+            if(map[projectName].find(a => a.name === areaName)){
+                alert('Area dengan nama ini sudah ada');
+                return;
+            }
+            
+            map[projectName].push({ name: areaName, items: [] });
             setProjectAreasMap(map);
+            console.log('✓ Area created:', areaName, 'in project:', projectName);
+            console.log('✓ Stored to localStorage');
             
-            console.log('Area saved to localStorage');
+            // Prepare redirect URL
+            const encodedProject = encodeURIComponent(projectName);
+            const encodedArea = encodeURIComponent(areaName);
+            const redirectUrl = 'area-detail.html?project=' + encodedProject + '&area=' + encodedArea;
             
+            console.log('✓ Redirect URL:', redirectUrl);
+            
+            // Reset form dan close modal dahulu
             addAreaForm.reset();
-            
-            // Build URL and redirect
-            const redirectUrl = 'area-detail.html?project=' + encodeURIComponent(projectName) + '&area=' + encodeURIComponent(areaName.trim());
-            console.log('Redirect URL:', redirectUrl);
-            console.log('Will redirect in 100ms...');
-            
             closeModal(addAreaModal);
             
-            // Use setTimeout to ensure everything is processed before redirect
-            setTimeout(function() {
-                console.log('Executing redirect to:', redirectUrl);
-                window.location.href = redirectUrl;
-            }, 100);
+            // Langsung redirect tanpa delay
+            console.log('✓ Redirecting now...');
+            window.location.href = redirectUrl;
         });
     }
 
