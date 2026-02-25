@@ -189,13 +189,10 @@ function renderAreaCards(projectIdx) {
     console.log('Areas found for project "' + projectName + '":', areas.length);
     
     if (areas.length === 0) {
-        // Jika belum ada area, buat satu area default agar UI menampilkan area langsung
-        const defaultAreaName = 'Umum';
-        console.log('No areas found, creating default area:', defaultAreaName);
-        areas = [{ name: defaultAreaName, items: [] }];
-        map[projectName] = areas;
-        setProjectAreasMap(map);
-        console.log('✓ Default area created and saved to localStorage');
+        // Jika belum ada area, tampilkan pesan kosong (jangan buat default)
+        console.log('No areas found, showing empty state');
+        container.innerHTML = '<p style="color:#999; text-align:center; padding:20px;">Belum ada area di project ini. Klik "+ Tambah Area" untuk membuat area baru.</p>';
+        return;
     }
     
     console.log('About to render', areas.length, 'area cards');
