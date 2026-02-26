@@ -109,14 +109,23 @@
           if (!data) {
             // Initialize with demo account if empty
             const seedUsers = [
-              { username: 'admin', email: 'admin@kans.local', password: 'Admin123', verified: true, confirmationCode: '' },
+              { username: 'admin', email: 'admin@kans.local', password: 'Kans2025', verified: true, confirmationCode: '' },
               { username: 'demo', email: 'demo@kans.local', password: 'Demo123456', verified: true, confirmationCode: '' }
             ];
             localStorage.setItem('kans_users', JSON.stringify(seedUsers));
             if(DEBUG) console.log('✓ Initialized with seed accounts:', seedUsers);
             return seedUsers;
           }
-          return JSON.parse(data); 
+          const users = JSON.parse(data);
+          // Ensure admin account has correct credentials
+          const adminUser = users.find(u => u.username === 'admin');
+          if (adminUser) {
+            adminUser.password = 'Kans2025';
+            adminUser.verified = true;
+            localStorage.setItem('kans_users', JSON.stringify(users));
+            if(DEBUG) console.log('✓ Admin password updated to: Kans2025');
+          }
+          return users;
         }catch(e){
           if(DEBUG) console.error('Error parsing users:', e);
           return [];
