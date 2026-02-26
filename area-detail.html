@@ -365,7 +365,7 @@
           }
           
           let html = '<table style="width:100%; border-collapse:collapse;">';
-          html += '<thead><tr style="background:rgba(245,245,245,0.15); border-bottom:2px solid #ffd700;"><th style="width:48px; text-align:center; padding:8px;">NO</th><th style="min-width:120px; text-align:left; padding:8px;">NAMA BARANG</th><th style="flex:1; min-width:80px; text-align:center; padding:8px;">VOLUME</th><th style="flex:1; min-width:80px; text-align:center; padding:8px;">SATUAN</th><th style="flex:1; min-width:100px; text-align:center; padding:8px;">SUPPLIER</th><th style="flex:1; min-width:100px; text-align:center; padding:8px;">TGL PENGIRIMAN</th><th style="flex:1; min-width:90px; text-align:center; padding:8px;">REALISASI</th><th style="flex:1; min-width:100px; text-align:left; padding:8px;">STATUS</th><th style="flex:2; min-width:200px; text-align:left; padding:8px;">NOTE</th><th style="flex:0 0 auto; width:100px; padding:8px;"></th></tr></thead><tbody>';
+          html += '<thead><tr style="background:rgba(245,245,245,0.15); border-bottom:2px solid #ffd700;"><th style="width:48px; text-align:center; padding:8px;">NO</th><th style="min-width:120px; text-align:left; padding:8px;">NAMA BARANG</th><th style="flex:1; min-width:80px; text-align:center; padding:8px;">VOLUME</th><th style="flex:1; min-width:80px; text-align:center; padding:8px;">SATUAN</th><th style="flex:1; min-width:100px; text-align:center; padding:8px;">SUPPLIER</th><th style="flex:1; min-width:100px; text-align:center; padding:8px;">TGL PENGIRIMAN</th><th style="flex:1; min-width:90px; text-align:center; padding:8px;">REALISASI</th><th style="flex:1; min-width:100px; text-align:left; padding:8px;">STATUS</th><th style="flex:2; min-width:200px; text-align:left; padding:8px;">NOTE</th></tr></thead><tbody>';
           let totalRealisasi = 0;
           let countRealisasi = 0;
           let displayNum = 1;
@@ -386,16 +386,6 @@
             html += `<td style="padding:8px; text-align:center; font-size:12px; flex:1;">${realisasiDisplay}</td>`;
             html += `<td style="padding:8px; font-size:12px; flex:1;">${getStatusBadgeHtml(currentStatus)}</td>`;
             html += `<td style="padding:8px; font-size:12px; flex:2; word-break:break-word; white-space:normal; line-height:1.4;" title="${escapeHtml(it.note || '')}">${escapeHtml(it.note || '-')}</td>`;
-            html += `<td style="padding:8px; text-align:right; flex:0 0 auto; width:100px;">`;
-            // Only show action buttons for admin users
-            if(isAdminUser()){
-              html += `<button class="detail-item" data-index="${actualIdx}" style="padding:6px 8px; margin-right:4px; background:#3498db; color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:11px;">Detail</button>`;
-              if(statusIndex < statusStages.length - 1) {
-                html += `<button class="next-status-btn" data-index="${actualIdx}" style="padding:6px 8px; margin-right:4px; background:#27ae60; color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:11px;">Next</button>`;
-              }
-              html += `<button class="remove-item" data-index="${actualIdx}" style="padding:6px 8px; background:#ff6b6b; color:#fff; border-radius:4px; border:0; cursor:pointer; font-size:11px;">Hapus</button>`;
-            }
-            html += `</td>`;
             html += '</tr>';
             displayNum++;
           });
@@ -403,75 +393,6 @@
           html += `<tr style="border-top:2px solid #ffd700; background:rgba(255,250,205,0.15); font-weight:bold;"><td colspan="8" style="padding:8px; text-align:right;">TOTAL REALISASI:</td><td style="padding:8px; text-align:right;">${avgRealisasi}</td></tr>`;;
           html += '</tbody></table>';
           itemsEl.innerHTML = html;
-
-          itemsEl.querySelectorAll('.next-status-btn').forEach(btn=>{
-            btn.addEventListener('click', function(e){
-              e.stopPropagation();
-              if(!isAdminUser()){ alert('Akses ditolak: hanya admin yang dapat mengubah status item.'); return; }
-              const index = parseInt(this.getAttribute('data-index'));
-              if(!isNaN(index) && index >= 0){
-                const item = areaObj.items[index];
-                const currentStatus = item.status || statusStages[0];
-                const currentIndex = statusStages.indexOf(currentStatus);
-                if(currentIndex >= 0 && currentIndex < statusStages.length - 1){
-                  const nextStatus = statusStages[currentIndex + 1];
-                  areaObj.items[index].status = nextStatus;
-                  map[projectName] = areaList;
-                  localStorage.setItem('kans_project_areas', JSON.stringify(map));
-                  renderItemsAndUpdateFilter();
-                }
-              }
-            });
-          });
-
-          itemsEl.querySelectorAll('.remove-item').forEach(btn=>{
-            btn.addEventListener('click', function(e){
-              e.stopPropagation();
-              if(!isAdminUser()){ alert('Akses ditolak: hanya admin yang dapat menghapus item.'); return; }
-              const index = parseInt(this.getAttribute('data-index'));
-              if(!isNaN(index) && index >= 0){
-                if(!confirm('Hapus item ini?')) return;
-                if(window.useServer){
-                  fetch('/api/projects').then(r=>r.json()).then(pd=>{
-                    const proj = pd.projects && pd.projects.find(p=>p.name===projectName);
-                    if(!proj) return alert('Project tidak ditemukan di server');
-                    fetch(`/api/projects/${proj.id}/areas`).then(r=>r.json()).then(ad=>{
-                      const area = ad.areas && ad.areas.find(a=>a.name===areaName);
-                      if(!area) return alert('Area tidak ditemukan di server');
-                      fetch(`/api/areas/${area.id}/items`).then(r=>r.json()).then(itemsResp=>{
-                        const item = itemsResp.items && itemsResp.items[index];
-                        if(item && item.id){
-                          fetch(`/api/items/${item.id}`, { method:'DELETE', headers: { Authorization: 'Bearer ' + (localStorage.getItem('kans_token')||'') } })
-                          .then(r=>r.json()).then(resp=>{ if(resp && resp.success){ renderItemsAndUpdateFilter(); infoEl.innerHTML = `<p><strong>Jumlah item:</strong> ${areaObj.items.length}</p>`; } else alert('Gagal menghapus item'); }).catch(err=>alert('Gagal menghapus item: '+err.message));
-                        } else {
-                          areaObj.items.splice(index,1);
-                          map[projectName] = areaList;
-                          localStorage.setItem('kans_project_areas', JSON.stringify(map));
-                          renderItemsAndUpdateFilter();
-                          infoEl.innerHTML = `<p><strong>Jumlah item:</strong> ${areaObj.items.length}</p>`;
-                        }
-                      }).catch(()=>alert('Gagal mengambil items'));
-                    }).catch(()=>alert('Gagal mengambil areas'));
-                  }).catch(()=>alert('Gagal mengakses server'));
-                  return;
-                }
-                areaObj.items.splice(index,1);
-                map[projectName] = areaList;
-                localStorage.setItem('kans_project_areas', JSON.stringify(map));
-                renderItemsAndUpdateFilter();
-                infoEl.innerHTML = `<p><strong>Jumlah item:</strong> ${areaObj.items.length}</p>`;
-              }
-            });
-          });
-
-          itemsEl.querySelectorAll('.detail-item').forEach(btn=>{
-            btn.addEventListener('click', function(e){
-              e.stopPropagation();
-              const index = parseInt(this.getAttribute('data-index'));
-              if(isNaN(index)) return;
-              openItemDetail(index);
-            });
-          });
         }
         
         renderItemsAndUpdateFilter();
