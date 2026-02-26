@@ -177,7 +177,7 @@
     </main>
   </div>
 
-  <script src="script.js?v=20260225-11"></script>
+  <script src="script.js?v=20260225-12"></script>
   <script>
     // admin check: only these usernames may add/edit/delete (fallback)
     function isAdminUser(){ try{ const cur = localStorage.getItem('kans_current'); return cur === 'admin' || cur === 'admin2'; }catch(e){ return false; } }
@@ -370,7 +370,7 @@
           }
           
           let html = '<table style="width:100%; border-collapse:collapse;">';
-          html += '<thead><tr style="background:rgba(245,245,245,0.7); border-bottom:2px solid #ffd700;"><th style="width:48px; text-align:center; padding:8px;">NO</th><th style="min-width:120px; text-align:left; padding:8px;">NAMA BARANG</th><th style="flex:1; min-width:80px; text-align:center; padding:8px;">VOLUME</th><th style="flex:1; min-width:80px; text-align:center; padding:8px;">SATUAN</th><th style="flex:1; min-width:100px; text-align:center; padding:8px;">SUPPLIER</th><th style="flex:1; min-width:90px; text-align:center; padding:8px;">REALISASI</th><th style="flex:1; min-width:100px; text-align:center; padding:8px;">TGL PENGIRIMAN</th><th style="flex:1; min-width:100px; text-align:left; padding:8px;">STATUS</th><th style="flex:1; min-width:140px; text-align:left; padding:8px;">NOTE</th><th style="flex:0 0 auto; width:100px; padding:8px;"></th></tr></thead><tbody>';
+          html += '<thead><tr style="background:rgba(245,245,245,0.15); border-bottom:2px solid #ffd700;"><th style="width:48px; text-align:center; padding:8px;">NO</th><th style="min-width:120px; text-align:left; padding:8px;">NAMA BARANG</th><th style="flex:1; min-width:80px; text-align:center; padding:8px;">VOLUME</th><th style="flex:1; min-width:80px; text-align:center; padding:8px;">SATUAN</th><th style="flex:1; min-width:100px; text-align:center; padding:8px;">SUPPLIER</th><th style="flex:1; min-width:90px; text-align:center; padding:8px;">REALISASI</th><th style="flex:1; min-width:100px; text-align:center; padding:8px;">TGL PENGIRIMAN</th><th style="flex:1; min-width:100px; text-align:left; padding:8px;">STATUS</th><th style="flex:1; min-width:140px; text-align:left; padding:8px;">NOTE</th><th style="flex:0 0 auto; width:100px; padding:8px;"></th></tr></thead><tbody>';
           let totalRealisasi = 0;
           let countRealisasi = 0;
           let displayNum = 1;
@@ -381,7 +381,7 @@
             const realisasiDisplay = realisasi !== null ? realisasi + '%' : '-';
             const currentStatus = it.status || statusStages[0];
             const statusIndex = statusStages.indexOf(currentStatus);
-            html += `<tr style="border-bottom:1px solid #eee; background:rgba(255,255,255,0.5);" data-index="${actualIdx}">`;
+            html += `<tr style="border-bottom:1px solid #eee; background:rgba(255,255,255,0.05);" data-index="${actualIdx}">`;
             html += `<td style="padding:8px; text-align:center; font-weight:bold; font-size:12px;">${displayNum}</td>`;
             html += `<td style="padding:8px; font-weight:500; font-size:13px;">${escapeHtml(it.name || '')}</td>`;
             html += `<td style="padding:8px; text-align:center; font-size:12px; flex:1;">${escapeHtml(it.volume || '-')}</td>`;
@@ -405,7 +405,7 @@
             displayNum++;
           });
           const avgRealisasi = countRealisasi > 0 ? (totalRealisasi / countRealisasi).toFixed(2) + '%' : '-';
-          html += `<tr style="border-top:2px solid #ffd700; background:rgba(255,250,205,0.6); font-weight:bold;"><td colspan="8" style="padding:8px; text-align:right;">TOTAL REALISASI:</td><td style="padding:8px; text-align:right;">${avgRealisasi}</td></tr>`;
+          html += `<tr style="border-top:2px solid #ffd700; background:rgba(255,250,205,0.15); font-weight:bold;"><td colspan="8" style="padding:8px; text-align:right;">TOTAL REALISASI:</td><td style="padding:8px; text-align:right;">${avgRealisasi}</td></tr>`;;
           html += '</tbody></table>';
           itemsEl.innerHTML = html;
 
