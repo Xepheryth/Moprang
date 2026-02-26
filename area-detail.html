@@ -23,7 +23,7 @@
       <h2 id="area-title" style="margin-bottom:12px;">Area</h2>
       <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
         <div style="display:flex; gap:8px;">
-          <button id="documents-area-btn" style="background:#27ae60; border:none; color:#fff; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold; box-shadow:0 2px 6px rgba(0,0,0,0.08);">📄 Dokumen Pengadaan</button>
+          <button id="documents-area-btn" style="background:#3498db; border:none; color:#fff; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold; box-shadow:0 2px 6px rgba(0,0,0,0.08);">📄 Dokumen Pengadaan</button>
         </div>
         <div style="margin-left:auto; position:relative;">
           <button id="area-menu-btn" aria-haspopup="true" aria-expanded="false" title="Menu" style="background:#fff; border:1px solid #ffd700; color:#333; padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:bold; box-shadow:0 2px 6px rgba(0,0,0,0.08);">⋮</button>
@@ -175,7 +175,7 @@
     </main>
   </div>
 
-  <script src="script.js?v=20260225-05"></script>
+  <script src="script.js?v=20260225-06"></script>
   <script>
     // admin check: only these usernames may add/edit/delete (fallback)
     function isAdminUser(){ try{ const cur = localStorage.getItem('kans_current'); return cur === 'admin' || cur === 'admin2'; }catch(e){ return false; } }
@@ -394,9 +394,6 @@
                 html += `<button class="next-status-btn" data-index="${actualIdx}" style="padding:6px 8px; margin-right:4px; background:#27ae60; color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:11px;">Next</button>`;
               }
               html += `<button class="remove-item" data-index="${actualIdx}" style="padding:6px 8px; background:#ff6b6b; color:#fff; border-radius:4px; border:0; cursor:pointer; font-size:11px;">Hapus</button>`;
-            } else {
-              // Show read-only badge for non-admin
-              html += `<span style="padding:6px 8px; background:#e0e0e0; color:#666; border-radius:4px; font-size:11px; display:inline-block;">Read-only</span>`;
             }
             html += `</td>`;
             html += '</tr>';
@@ -725,6 +722,16 @@
             documentTypes.forEach(docType => {
               const docDiv = document.createElement('div');
               docDiv.style.cssText = 'border:1px solid #ddd; padding:16px; border-radius:6px; background:#f9f9f9;';
+              const uploadSection = isAdminUser() ? `
+                  <!-- Upload Section (Admin Only) -->
+                  <div>
+                    <div style="display:flex; gap:8px; align-items:stretch;">
+                      <button type="button" class="choose-file-btn" data-doctype="${docType}" style="flex:1; padding:8px 12px; background:#ff6b6b; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold; white-space:nowrap;">📁 Pilih File</button>
+                      <button type="button" class="upload-doc-area-btn" data-doctype="${docType}" style="flex:1; padding:8px 12px; background:#27ae60; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:12px; white-space:nowrap; font-weight:bold;">📤 Upload</button>
+                      <input type="file" id="file-${docType}" style="display:none;">
+                    </div>
+                  </div>
+              ` : '';
               docDiv.innerHTML = `
                 <div>
                   <label style="display:block; font-weight:bold; font-size:14px; margin-bottom:12px; color:#333;">${docType}</label>
@@ -733,15 +740,7 @@
                   <div id="doc-list-${docType}" style="font-size:12px; color:#666; margin-bottom:16px; padding:10px; background:#fff; border-radius:4px; border:1px solid #eee; min-height:32px; display:flex; align-items:center; justify-content:space-between;">
                     <span>Belum ada dokumen</span>
                   </div>
-                  
-                  <!-- Upload Section -->
-                  <div>
-                    <div style="display:flex; gap:8px; align-items:stretch;">
-                      <button type="button" class="choose-file-btn" data-doctype="${docType}" style="flex:1; padding:8px 12px; background:#ff6b6b; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold; white-space:nowrap;">📁 Pilih File</button>
-                      <button type="button" class="upload-doc-area-btn" data-doctype="${docType}" style="flex:1; padding:8px 12px; background:#27ae60; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:12px; white-space:nowrap; font-weight:bold;">📤 Upload</button>
-                      <input type="file" id="file-${docType}" style="display:none;">
-                    </div>
-                  </div>
+                  ${uploadSection}
                 </div>
               `;
               docsGrid.appendChild(docDiv);
@@ -800,7 +799,8 @@
                 const doc = areaObj.areaDocuments[docType];
                 const fileName = doc.name.length > 20 ? doc.name.substring(0, 17) + '...' : doc.name;
                 const downloadLink = `<a href="${doc.data}" download="${doc.name}" style="color:#27ae60; text-decoration:none; cursor:pointer; font-weight:bold;">✓ ${fileName}</a>`;
-                listDiv.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%;">${downloadLink}<button type="button" class="delete-doc-btn" data-doctype="${docType}" style="background:#e74c3c; border:none; color:#fff; padding:2px 6px; border-radius:3px; cursor:pointer; font-size:10px; font-weight:bold; margin-left:auto; line-height:1.4;">Hapus</button></div>`;
+                const deleteBtn = isAdminUser() ? `<button type="button" class="delete-doc-btn" data-doctype="${docType}" style="background:#e74c3c; border:none; color:#fff; padding:2px 6px; border-radius:3px; cursor:pointer; font-size:10px; font-weight:bold; margin-left:auto; line-height:1.4;">Hapus</button>` : '';
+                listDiv.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%;">${downloadLink}${deleteBtn}</div>`;
               } else {
                 listDiv.innerHTML = '<span style="color:#999;">Belum ada dokumen</span>';
               }
@@ -826,7 +826,6 @@
 
           if(docsAreaBtn){
             docsAreaBtn.addEventListener('click', function(){
-              if(!isAdminUser()){ alert('Akses ditolak: hanya admin yang dapat mengatur dokumen.'); return; }
               buildDocumentsGrid();
               updateAreaDocumentsDisplay();
               openModal(docsModal);
