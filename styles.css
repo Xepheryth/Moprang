@@ -91,12 +91,12 @@ body::before {
     transform: translate(-50%, -50%);
     width: 1000px;
     height: 1000px;
-    background-image: url('media/Kans\ 2.png');
+    background-image: url('media/logo-kans.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
     margin: 0;
-    opacity: 0.3;
+    opacity: 0.15;
     pointer-events: none;
     z-index: 0;
 }
