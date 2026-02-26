@@ -664,7 +664,6 @@ function clearCurrentUser(){
 
 function loadProfile(){
     const cur = localStorage.getItem('kans_current');
-    const token = localStorage.getItem('kans_token');
     const usernameEl = document.getElementById('profile-username');
     const emailEl = document.getElementById('profile-email');
     const photoEl = document.getElementById('profile-photo');
@@ -678,49 +677,33 @@ function loadProfile(){
         return;
     }
     
-    if(loading) loading.style.display='block';
+    if(loading) loading.style.display='none';
     if(error) error.style.display='none';
     
-    // Fetch profile dari backend
-    if(token){
-        fetch('http://localhost:3000/api/profile', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(loading) loading.style.display='none';
-            if(data.success && data.profile){
-                const profile = data.profile;
-                if(usernameEl) usernameEl.textContent = profile.username || cur;
-                if(emailEl) emailEl.textContent = profile.email || '-';
-                if(profile.profile_photo && photoEl){
-                    photoEl.src = profile.profile_photo;
-                    photoEl.style.borderColor = '#FFD700';
-                }
-                if(profileInfo) profileInfo.style.display='block';
-            } else {
-                // Fallback ke localStorage jika API gagal
-                if(usernameEl) usernameEl.textContent = cur;
-                if(profileInfo) profileInfo.style.display='block';
-            }
-        })
-        .catch(err => {
-            console.error('Profile fetch error:', err);
-            if(loading) loading.style.display='none';
-            // Fallback
-            if(usernameEl) usernameEl.textContent = cur;
-            if(profileInfo) profileInfo.style.display='block';
-        });
-    } else {
-        // Fallback jika tidak ada token
-        if(loading) loading.style.display='none';
-        if(usernameEl) usernameEl.textContent = cur;
-        if(profileInfo) profileInfo.style.display='block';
+    // Load profile from localStorage
+    if(usernameEl) usernameEl.textContent = cur;
+    
+    // Try to load email from kans_users
+    try {
+        const users = JSON.parse(localStorage.getItem('kans_users') || '[]');
+        const user = users.find(u => u.username === cur);
+        if(user && emailEl) emailEl.textContent = user.email || '-';
+    } catch(e) {
+        if(emailEl) emailEl.textContent = '-';
     }
+    
+    // Load profile photo from localStorage
+    try {
+        const userProfiles = JSON.parse(localStorage.getItem('kans_user_profiles') || '{}');
+        if(userProfiles[cur] && userProfiles[cur].photo && photoEl){
+            photoEl.src = userProfiles[cur].photo;
+            photoEl.style.borderColor = '#FFD700';
+        }
+    } catch(e) {
+        // Fallback if photo doesn't exist
+    }
+    
+    if(profileInfo) profileInfo.style.display='block';
 }
 
 // Handle profile photo upload
@@ -728,13 +711,19 @@ function setupProfilePhotoUpload(){
     const photoInput = document.getElementById('profile-photo-input');
     const photoEl = document.getElementById('profile-photo');
     const statusEl = document.getElementById('profile-photo-status');
-    const token = localStorage.getItem('kans_token');
+    const currentUser = localStorage.getItem('kans_current');
     
     if(!photoInput) return;
     
     photoInput.addEventListener('change', function(e){
         const file = e.target.files[0];
         if(!file) return;
+        
+        // Check if user is logged in
+        if(!currentUser){
+            if(statusEl) statusEl.textContent = '❌ Harus login untuk upload foto';
+            return;
+        }
         
         // Validasi ukuran file
         if(file.size > 5 * 1024 * 1024){
@@ -749,45 +738,34 @@ function setupProfilePhotoUpload(){
             return;
         }
         
-        // Preview lokal
+        if(statusEl) statusEl.textContent = '⏳ Processing...';
+        
+        // Convert file to base64 dan simpan di localStorage
         const reader = new FileReader();
         reader.onload = function(event){
-            if(photoEl) photoEl.src = event.target.result;
+            try {
+                const base64 = event.target.result;
+                
+                // Store profile photo in localStorage
+                let userProfiles = JSON.parse(localStorage.getItem('kans_user_profiles') || '{}');
+                userProfiles[currentUser] = {
+                    photo: base64,
+                    uploadedAt: new Date().toISOString()
+                };
+                localStorage.setItem('kans_user_profiles', JSON.stringify(userProfiles));
+                
+                // Update display
+                if(photoEl) photoEl.src = base64;
+                if(statusEl) statusEl.textContent = '✅ Foto berhasil diupload';
+            } catch(err) {
+                console.error('Photo save error:', err);
+                if(statusEl) statusEl.textContent = '❌ Gagal menyimpan foto';
+            }
+        };
+        reader.onerror = function(){
+            if(statusEl) statusEl.textContent = '❌ Gagal membaca file';
         };
         reader.readAsDataURL(file);
-        
-        // Upload ke server
-        if(!token){
-            if(statusEl) statusEl.textContent = '❌ Harus login untuk upload foto';
-            return;
-        }
-        
-        if(statusEl) statusEl.textContent = '⏳ Uploading...';
-        
-        const formData = new FormData();
-        formData.append('photo', file);
-        
-        fetch('http://localhost:3000/api/profile/photo', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            },
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.success){
-                if(statusEl) statusEl.textContent = '✅ Foto berhasil diupload';
-                // Update foto display
-                if(photoEl) photoEl.src = data.photoPath;
-            } else {
-                if(statusEl) statusEl.textContent = `❌ ${data.message || 'Gagal upload foto'}`;
-            }
-        })
-        .catch(err => {
-            console.error('Upload error:', err);
-            if(statusEl) statusEl.textContent = '❌ Gagal upload foto. Periksa koneksi atau server.';
-        });
     });
 }
 
