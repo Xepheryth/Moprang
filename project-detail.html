@@ -17,15 +17,6 @@
             <li><a href="Front.html" class="nav-link">Daftar Project</a></li>
             <li><a href="#" class="nav-link" id="profile-link" style="display:none;">Profile</a></li>
           </ul>
-          <div class="search-box">
-            <input type="text" id="search-input" placeholder=" " class="search-input">
-            <button id="search-btn" class="search-btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-              </svg>
-            </button>
-          </div>
         </nav>
         <div class="header-actions">
           <div id="user-badge" class="user-badge" style="display:none;"></div>
@@ -125,7 +116,7 @@
     </main>
   </div>
 
-  <script src="script.js?v=20260225-15"></script>
+  <script src="script.js?v=20260225-16"></script>
   <script>
     // admin check: only these usernames may add/edit/delete
     function isAdminUser(){ try{ const cur = localStorage.getItem('kans_current'); return cur === 'admin' || cur === 'admin2'; }catch(e){ return false; } }
