@@ -496,20 +496,27 @@ function searchShipments(query) {
     });
 }
 
-// Setup event listener untuk search
-document.getElementById('search-btn').addEventListener('click', function() {
-    const query = document.getElementById('search-input').value;
-    showPage('shipments'); // Tampilkan halaman Daftar Project
-    searchShipments(query);
-});
+// Setup event listener untuk search (if search elements exist)
+const searchBtn = document.getElementById('search-btn');
+const searchInput = document.getElementById('search-input');
 
-document.getElementById('search-input').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        const query = this.value;
+if(searchBtn) {
+    searchBtn.addEventListener('click', function() {
+        const query = searchInput.value;
         showPage('shipments'); // Tampilkan halaman Daftar Project
         searchShipments(query);
-    }
-});
+    });
+}
+
+if(searchInput) {
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            const query = this.value;
+            showPage('shipments'); // Tampilkan halaman Daftar Project
+            searchShipments(query);
+        }
+    });
+}
 
 // Setup event listener untuk navigasi
 document.querySelectorAll('.nav-link').forEach(link => {
