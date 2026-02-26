@@ -175,7 +175,7 @@
     </main>
   </div>
 
-  <script src="script.js?v=20260225-07"></script>
+  <script src="script.js?v=20260225-08"></script>
   <script>
     // admin check: only these usernames may add/edit/delete (fallback)
     function isAdminUser(){ try{ const cur = localStorage.getItem('kans_current'); return cur === 'admin' || cur === 'admin2'; }catch(e){ return false; } }
@@ -718,7 +718,7 @@
             docsAreaName.textContent = areaName;
             docsGrid.innerHTML = '';
             
-            const documentTypes = ['PO', 'Invoice', 'Surat Jalan', 'BAST', 'BAPP', 'BASTB'];
+            const documentTypes = ['PO', 'Invoice', 'Surat Jalan', 'BAPP', 'BASTB', 'Dokumentasi'];
             documentTypes.forEach(docType => {
               const docDiv = document.createElement('div');
               docDiv.style.cssText = 'border:1px solid #ddd; padding:16px; border-radius:6px; background:#f9f9f9;';
@@ -792,7 +792,7 @@
           }
 
           function updateAreaDocumentsDisplay(){
-            const documentTypes = ['PO', 'Invoice', 'Surat Jalan', 'BAST', 'BAPP', 'BASTB'];
+            const documentTypes = ['PO', 'Invoice', 'Surat Jalan', 'BAPP', 'BASTB', 'Dokumentasi'];
             documentTypes.forEach(docType => {
               const listDiv = document.getElementById(`doc-list-${docType}`);
               if(areaObj.areaDocuments && areaObj.areaDocuments[docType]){
