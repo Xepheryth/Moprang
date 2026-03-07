@@ -292,8 +292,10 @@
     const projectName = getQueryParam('project') || localStorage.getItem('kans_current_project');
     const areaName = getQueryParam('area') || localStorage.getItem('kans_current_area');
     
-    // Declare areaObj at this scope so it's accessible to all functions
+    // Declare at this scope so accessible to all functions
     let areaObj = null;
+    let map = {};
+    let areaList = [];
     let currentSupplierFilter = '';
 
     const titleEl = document.getElementById('area-title');
@@ -319,8 +321,8 @@
       console.error('Area detail error: projectName=' + projectName + ', areaName=' + areaName);
     } else {
       titleEl.textContent = areaName + ' — ' + projectName;
-      const map = JSON.parse(localStorage.getItem('kans_project_areas') || '{}');
-      const areaList = map[projectName] || [];
+      map = JSON.parse(localStorage.getItem('kans_project_areas') || '{}');
+      areaList = map[projectName] || [];
       console.log('Looking for area:', areaName, 'in project:', projectName);
       console.log('Available areas:', areaList.map(a => a.name));
       areaObj = areaList.find(a=>a.name===areaName);
