@@ -1089,21 +1089,45 @@
               }
               
               // Use detected header row to parse data
+              // Build range dari header row sampai end row untuk precise data extraction
+              const headerRowNum = detectionResult.headerRowIndex + 1; // Convert to 1-based
+              const startCol = XLSX.utils.encode_col(range.s.c);
+              const endCol = XLSX.utils.encode_col(range.e.c);
+              const endRow = range.e.r + 1; // Convert to 1-based
+              const dataRange = `${startCol}${headerRowNum}:${endCol}${endRow}`;
+              
+              console.log(`Parsing range: ${dataRange}`);
+              
               const jsonData = XLSX.utils.sheet_to_json(firstSheet, {
                 defval: '', 
                 blankrows: false,
-                header: detectionResult.headerRow
+                header: detectionResult.headerRow,
+                range: dataRange
               });
               
-              // Filter out empty rows
+              console.log(`Raw parsed rows: ${jsonData.length}`);
+              
+              // Filter out empty rows (baris pertama bisa jadi header row yang duplicate)
               excelData = jsonData.filter((row, idx) => {
                 // Skip if row is completely empty
                 const hasValue = Object.values(row).some(val => val && String(val).trim());
+                
+                // Skip jika row ini identik dengan header (avoid duplicate headers)
+                if(idx === 0){
+                  const isHeaderRow = detectionResult.headerRow.every((header, colIdx) => {
+                    const key = Object.keys(row)[colIdx];
+                    return key === header;
+                  });
+                  if(isHeaderRow) return false;
+                }
+                
                 return hasValue;
               });
               
+              console.log(`Filtered rows (after removing empty & header dups): ${excelData.length}`);
+              
               if(excelData.length === 0){
-                alert('File Excel kosong atau tidak ada data yang valid');
+                alert('File Excel kosong atau tidak ada data yang valid setelah header');
                 fileInput.value = '';
                 fileNameDisplay.style.display = 'none';
                 return;
@@ -1113,10 +1137,12 @@
               excelExactMatches = detectionResult.exactMatches || {};
               
               console.log('Processed:', {
-                totalRows: excelData.length,
+                totalDataRows: excelData.length,
                 columns: excelColumns,
-                startRow: detectionResult.dataStartRow,
+                headerRowIndex: detectionResult.headerRowIndex,
                 headerRow: detectionResult.headerRow,
+                dataRange: dataRange,
+                sampleFirstRow: excelData[0],
                 exactMatches: excelExactMatches
               });
               
