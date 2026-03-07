@@ -1718,6 +1718,7 @@
           const lines = text.split('\n').filter(l => l.trim());
           let allParsedRows = [];
           pdfColumns = [];
+          let headerRowIndex = -1;
           
           lines.forEach((line, idx) => {
             // Try multiple separators
@@ -1741,30 +1742,35 @@
                 row[colName] = val;
                 if(!pdfColumns.includes(colName)) pdfColumns.push(colName);
               });
+              
+              // Deteksi header row: cari baris yang berisi "nama barang", "volume", "satuan"
+              if(headerRowIndex === -1){
+                const rowValues = Object.values(row).map(v => String(v || '').toLowerCase().trim());
+                const hasNamaBarang = rowValues.some(v => v === 'nama barang' || v === 'nama item');
+                const hasVolume = rowValues.some(v => v === 'volume' || v === 'jumlah' || v === 'qty');
+                const hasSatuan = rowValues.some(v => v === 'satuan' || v === 'unit' || v === 'uom');
+                
+                if((hasNamaBarang || hasVolume || hasSatuan) && rowValues.length >= 2){
+                  headerRowIndex = allParsedRows.length;
+                  console.log(`Header row detected at index ${headerRowIndex}: ${Object.values(row).join(' | ')}`);
+                }
+              }
+              
               allParsedRows.push(row);
             }
           });
           
-          // Filter out header rows (skip rows yang cocok dengan header patterns)
-          const headerPatterns = ['nama barang', 'nama item', 'volume', 'satuan', 'unit', 'qty', 'jumlah'];
-          pdfData = allParsedRows.filter((row, idx) => {
-            // Check if row values looks like header (all values match header patterns)
-            const values = Object.values(row).map(v => String(v || '').toLowerCase().trim());
-            const matchesHeaderPattern = values.every(val => {
-              return val.length === 0 || headerPatterns.some(pattern => val === pattern || val.includes(pattern));
-            });
-            
-            // Only skip if it looks like a header (first row atau values semua match pattern)
-            if(matchesHeaderPattern && (idx === 0 || values.join('|').includes('nama barang'))){
-              console.log(`Skipped potential header row: ${Object.values(row).join(' | ')}`);
-              return false;
-            }
-            return true;
-          });
+          // Filter data: hanya ambil rows setelah header row
+          if(headerRowIndex >= 0){
+            pdfData = allParsedRows.slice(headerRowIndex + 1);
+          } else {
+            pdfData = allParsedRows;
+          }
           
           console.log('Parsed data:', {
             rawRows: allParsedRows.length,
-            filteredRows: pdfData.length,
+            headerRowIndex: headerRowIndex,
+            dataRows: pdfData.length,
             columns: pdfColumns
           });
           
