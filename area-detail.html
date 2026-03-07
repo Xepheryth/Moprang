@@ -1244,107 +1244,146 @@
       }
       
       function tryAutoMapColumns(){
-        console.log('=== Auto-detect starting (smart) ===');
+        console.log('=== Auto-detect starting (prioritize exact match) ===');
         console.log('Available Excel columns:', excelColumns);
         console.log('Sample data:', excelData.slice(0, 3));
         
-        // Analyze each column to understand its content
-        const columnScores = {};
-        
-        excelColumns.forEach(col => {
-          columnScores[col] = {
-            nameScore: 0,      // How likely it's Nama Barang
-            volumeScore: 0,    // How likely it's Volume
-            unitScore: 0       // How likely it's Satuan
-          };
-          
-          // Analyze column header
-          const headerLower = col.toLowerCase();
-          const namePatterns = ['nama barang', 'nama item', 'nama produk', 'nama', 'barang', 'item', 'produk', 'name', 'product'];
-          const volumePatterns = ['volume', 'jumlah', 'qty', 'quantity', 'vol', 'jml', 'banyaknya', 'amount'];
-          const unitPatterns = ['satuan', 'unit', 'uom', 'pcs'];
-          
-          namePatterns.forEach(p => {
-            if(headerLower.includes(p)) columnScores[col].nameScore += 10;
-          });
-          volumePatterns.forEach(p => {
-            if(headerLower.includes(p)) columnScores[col].volumeScore += 10;
-          });
-          unitPatterns.forEach(p => {
-            if(headerLower.includes(p)) columnScores[col].unitScore += 10;
-          });
-          
-          // Analyze sample data
-          const sampleValues = excelData.slice(0, 5).map(r => String(r[col] || '').trim()).filter(v => v);
-          
-          sampleValues.forEach(val => {
-            const valLower = val.toLowerCase();
-            
-            // Check if value looks like name (contains letters, not just numbers)
-            if(/[a-z]/.test(valLower) && val.length > 2){
-              columnScores[col].nameScore += 5;
-            }
-            
-            // Check if value looks like number (volume)
-            if(/^\d+(\.\d+)?$/.test(val)){
-              columnScores[col].volumeScore += 8;
-            }
-            
-            // Check if value is short and looks like unit
-            if(val.length <= 10 && /^[a-z0-9]+$/i.test(val) && !/\s/.test(val)){
-              columnScores[col].unitScore += 5;
-            }
-            
-            // Check common unit values
-            const unitValues = ['pcs', 'box', 'set', 'unit', 'kg', 'gram', 'liter', 'meter', 'roll', 'piece', 'pc', 'bks', 'dus', 'ikat'];
-            if(unitValues.includes(valLower)){
-              columnScores[col].unitScore += 15;
-            }
-          });
-        });
-        
-        console.log('Column scores:', columnScores);
-        
-        // Map columns based on highest scores
-        const mappings = {
-          'map-name': 'nameScore',
-          'map-volume': 'volumeScore',
-          'map-unit': 'unitScore'
+        // Define target names dan patterns
+        const targets = {
+          'map-name': {
+            exact: ['nama barang', 'nama item', 'nama'],
+            partial: ['barang', 'item', 'produk', 'name', 'product'],
+            keywords: ['nama', 'barang', 'item']
+          },
+          'map-volume': {
+            exact: ['volume', 'jumlah', 'qty'],
+            partial: ['vol', 'jml', 'quantity', 'amount'],
+            keywords: ['volume', 'qty', 'jumlah']
+          },
+          'map-unit': {
+            exact: ['satuan', 'unit'],
+            partial: ['uom', 'kemasan', 'ukuran'],
+            keywords: ['satuan', 'unit']
+          }
         };
         
         let allMapped = true;
+        const mappedCols = new Set(); // Track which columns already mapped
         
-        for(let selectId in mappings){
-          const scoreKey = mappings[selectId];
+        // Step 1: Try exact name match first
+        console.log('\n=== STEP 1: Exact header match ===');
+        for(let selectId in targets){
           const select = document.getElementById(selectId);
           if(!select) continue;
           
-          // Find column with highest score
+          const exactNames = targets[selectId].exact;
+          let found = false;
+          
+          for(let col of excelColumns){
+            const colLower = col.toLowerCase().trim();
+            
+            for(let exact of exactNames){
+              if(colLower === exact.toLowerCase()){
+                select.value = col;
+                mappedCols.add(col);
+                console.log(`✓ ${selectId}: EXACT MATCH "${col}"`);
+                found = true;
+                break;
+              }
+            }
+            
+            if(found) break;
+          }
+          
+          if(!found){
+            console.log(`⚠ ${selectId}: no exact match, will try partial match`);
+          }
+        }
+        
+        // Step 2: Try partial match for unmapped fields
+        console.log('\n=== STEP 2: Partial header match ===');
+        for(let selectId in targets){
+          const select = document.getElementById(selectId);
+          if(!select || select.value) continue; // Skip if already mapped
+          
+          const partialPatterns = targets[selectId].partial;
+          const keywords = targets[selectId].keywords;
+          
+          // Find best matching column
           let bestCol = '';
           let bestScore = 0;
           
-          excelColumns.forEach(col => {
-            if(columnScores[col][scoreKey] > bestScore){
-              bestScore = columnScores[col][scoreKey];
+          for(let col of excelColumns){
+            if(mappedCols.has(col)) continue; // Skip already mapped
+            
+            const colLower = col.toLowerCase().trim();
+            let score = 0;
+            
+            // Check partial matches
+            for(let pattern of partialPatterns){
+              if(colLower.includes(pattern.toLowerCase())){
+                score += 5;
+              }
+            }
+            
+            // Check keywords in header
+            for(let kw of keywords){
+              if(colLower.includes(kw.toLowerCase())){
+                score += 3;
+              }
+            }
+            
+            // Analyze actual data content
+            const sampleValues = excelData.slice(0, 5)
+              .map(r => String(r[col] || '').trim())
+              .filter(v => v);
+            
+            if(sampleValues.length > 0){
+              sampleValues.forEach(val => {
+                const valLower = val.toLowerCase();
+                
+                if(selectId === 'map-name'){
+                  // Name: should have letters, not just numbers
+                  if(/[a-z]/i.test(val) && val.length > 2) score += 2;
+                }
+                
+                if(selectId === 'map-volume'){
+                  // Volume: should be numeric
+                  if(/^\d+(\.\d+)?$/.test(val)) score += 3;
+                }
+                
+                if(selectId === 'map-unit'){
+                  // Unit: check common unit values
+                  const unitValues = ['pcs', 'box', 'set', 'unit', 'kg', 'gram', 'liter', 'meter', 'roll', 'piece', 'pc', 'bks', 'dus', 'ikat', 'm', 'cm'];
+                  if(unitValues.includes(valLower)) score += 5;
+                  if(val.length <= 10 && /^[a-z0-9]+$/i.test(val)) score += 1;
+                }
+              });
+            }
+            
+            if(score > bestScore){
+              bestScore = score;
               bestCol = col;
             }
-          });
+          }
           
           if(bestCol && bestScore > 0){
             select.value = bestCol;
-            console.log(`✓ ${selectId}: "${bestCol}" (score: ${bestScore})`);
+            mappedCols.add(bestCol);
+            console.log(`✓ ${selectId}: PARTIAL MATCH "${bestCol}" (score: ${bestScore})`);
           } else {
-            console.warn(`⚠ ${selectId}: no good match found`);
+            console.warn(`⚠ ${selectId}: no good match. Need manual selection`);
             allMapped = false;
           }
         }
         
-        console.log('Auto-detect result: ' + (allMapped ? '✓ All fields mapped' : '⚠ Some fields not mapped'));
+        console.log('\n=== Auto-detect COMPLETE ===');
+        console.log('All fields mapped:', allMapped);
         
         // Auto-show preview if all 3 fields mapped
         if(allMapped){
-          console.log('Calling showPreview() automatically...');
-          setTimeout(() => showPreview(), 100);
+          console.log('✓ Auto-showing preview...');
+          setTimeout(() => showPreview(), 150);
         }
       }
       
