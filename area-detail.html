@@ -1786,15 +1786,21 @@
       }
       
       // Add next button for step 3 (column mapping)
-      const pdfNextBtn2Div = document.querySelector('.modal-actions');
-      if(pdfNextBtn2Div && !document.getElementById('pdf-next-btn-2')){
-        const nextBtn2 = document.createElement('button');
-        nextBtn2.id = 'pdf-next-btn-2';
-        nextBtn2.className = 'btn primary';
-        nextBtn2.textContent = 'Lanjut';
-        nextBtn2.style.display = 'none';
-        nextBtn2.addEventListener('click', showPdfPreview);
-        pdfNextBtn2Div.insertBefore(nextBtn2, pdfConfirmBtn);
+      if(pdfConfirmBtn){
+        // Find the modal-actions div that's inside the PDF modal
+        const pdfModalActionDiv = pdfModal?.querySelector('.modal-actions');
+        
+        if(pdfModalActionDiv && !document.getElementById('pdf-next-btn-2')){
+          const nextBtn2 = document.createElement('button');
+          nextBtn2.id = 'pdf-next-btn-2';
+          nextBtn2.className = 'btn primary';
+          nextBtn2.textContent = 'Lanjut';
+          nextBtn2.style.display = 'none';
+          nextBtn2.addEventListener('click', showPdfPreview);
+          
+          // Insert before confirm button
+          pdfModalActionDiv.insertBefore(nextBtn2, pdfConfirmBtn);
+        }
       }
       
       // Confirm button - import data
