@@ -24,6 +24,7 @@
       <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
         <div style="display:flex; gap:8px;">
           <button id="documents-area-btn" style="background:#3498db; border:none; color:#fff; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold; box-shadow:0 2px 6px rgba(0,0,0,0.08);">📄 Dokumen Pengadaan</button>
+          <button id="import-excel-btn" style="background:#27ae60; border:none; color:#fff; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold; box-shadow:0 2px 6px rgba(0,0,0,0.08); display:none;">📊 Impor dari Excel</button>
         </div>
         <div style="margin-left:auto; position:relative;">
           <button id="area-menu-btn" aria-haspopup="true" aria-expanded="false" title="Menu" style="background:#fff; border:1px solid #ffd700; color:#333; padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:bold; box-shadow:0 2px 6px rgba(0,0,0,0.08);">⋮</button>
@@ -36,15 +37,7 @@
       <div id="area-info" style="margin-top:16px;"></div>
 
       <section style="margin-top:18px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px;">
-          <h3 style="margin:0;">Daftar Item :</h3>
-          <div style="display:flex; gap:8px; align-items:center;">
-            <label for="supplier-filter" style="font-size:13px; font-weight:600; color:#666;">Filter Supplier:</label>
-            <select id="supplier-filter" style="padding:6px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px; background:#fff; cursor:pointer;">
-              <option value="">-- Semua Supplier --</option>
-            </select>
-          </div>
-        </div>
+        <h3 style="margin:0; margin-bottom:12px;">Daftar Item :</h3>
         <div id="items-list" style="margin-top:8px; margin-right:4px;"></div>
         <div id="add-item-section" style="margin-top:12px; display:grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; gap:8px; align-items:center;">
           <input id="new-item-name" placeholder="Nama item baru" style="padding:8px; border:1px solid #ddd; border-radius:4px;" />
@@ -96,6 +89,66 @@
           
           <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;" id="documents-grid">
             <!-- Document cards will be inserted here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Impor Excel -->
+      <div id="import-excel-modal" class="modal-overlay" aria-hidden="true" style="display:none; z-index:1001;">
+        <div class="modal-floating" role="dialog" aria-modal="true" aria-labelledby="import-excel-title" style="max-width:900px; max-height:90vh; overflow-y:auto; position:relative;">
+          <button type="button" id="close-import-excel-btn" style="position:absolute; top:12px; right:16px; background:none; border:none; font-size:28px; cursor:pointer; color:#999; padding:0; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">×</button>
+          <h3 id="import-excel-title" style="margin-bottom:20px;">Impor Data dari Excel</h3>
+          
+          <!-- Step 1: File Upload -->
+          <div id="import-step-1" style="display:block;">
+            <div style="padding:20px; border:2px dashed #ddd; border-radius:8px; text-align:center; background:#f9f9f9;">
+              <p style="margin:0 0 12px 0; font-size:14px; color:#333;"><strong>Pilih file Excel (.xlsx, .xls)</strong></p>
+              <input type="file" id="excel-file-input" accept=".xlsx,.xls" style="display:none;">
+              <button type="button" id="excel-choose-file-btn" style="padding:10px 20px; background:#3498db; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">📁 Pilih File</button>
+              <p style="margin:12px 0 0 0; font-size:12px; color:#999;">Format: Excel (.xlsx atau .xls)</p>
+            </div>
+            <div id="excel-file-name" style="margin-top:12px; padding:10px; background:#e8f4f8; border-radius:4px; display:none; font-size:12px; color:#333;">
+              File dipilih: <strong id="excel-file-text"></strong>
+            </div>
+          </div>
+          
+          <!-- Step 2: Column Mapping -->
+          <div id="import-step-2" style="display:none; margin-top:20px;">
+            <p style="margin:0 0 12px 0; font-size:13px; color:#666;"><strong>Pilih kolom Excel yang sesuai dengan field item:</strong></p>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+              <div style="display:flex; flex-direction:column;">
+                <label style="font-size:12px; font-weight:bold; margin-bottom:4px; color:#333;">Nama Barang *</label>
+                <select id="map-name" style="padding:8px; border:1px solid #ddd; border-radius:4px; font-family:Arial;">
+                  <option value="">-- Pilih Kolom --</option>
+                </select>
+              </div>
+              <div style="display:flex; flex-direction:column;">
+                <label style="font-size:12px; font-weight:bold; margin-bottom:4px; color:#333;">Volume</label>
+                <select id="map-volume" style="padding:8px; border:1px solid #ddd; border-radius:4px; font-family:Arial;">
+                  <option value="">-- Pilih Kolom --</option>
+                </select>
+              </div>
+              <div style="display:flex; flex-direction:column;">
+                <label style="font-size:12px; font-weight:bold; margin-bottom:4px; color:#333;">Satuan</label>
+                <select id="map-unit" style="padding:8px; border:1px solid #ddd; border-radius:4px; font-family:Arial;">
+                  <option value="">-- Pilih Kolom --</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Step 3: Preview Data -->
+          <div id="import-step-3" style="display:none; margin-top:20px;">
+            <p style="margin:0 0 12px 0; font-size:13px; color:#666;"><strong>Preview Data (5 baris pertama):</strong></p>
+            <div id="import-preview-table" style="overflow-x:auto; max-height:300px; border:1px solid #ddd; border-radius:4px; background:#fff;"></div>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="modal-actions" style="margin-top:24px; display:flex; gap:8px; justify-content:flex-end;">
+            <button type="button" id="import-cancel-btn" class="btn cancel">Batal</button>
+            <button type="button" id="import-reset-btn" class="btn" style="background:#999; color:#fff; border:none; cursor:pointer; padding:8px 16px; border-radius:6px;">Reset</button>
+            <button type="button" id="import-next-btn" class="btn primary" style="display:none;">Lanjut</button>
+            <button type="button" id="import-confirm-btn" class="btn primary" style="display:none;">✓ Impor Sekarang</button>
           </div>
         </div>
       </div>
@@ -172,7 +225,8 @@
     </main>
   </div>
 
-  <script src="script.js?v=20260225-15"></script>
+  <script src="script.js?v=20260225-16"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
   <script>
     // admin check: only these usernames may add/edit/delete (fallback)
     function isAdminUser(){ try{ const cur = localStorage.getItem('kans_current'); return cur === 'admin' || cur === 'admin2'; }catch(e){ return false; } }
@@ -317,35 +371,10 @@
           return `<span class="status-badge" style="background:${color}; color:#fff; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold;">${status}</span>`;
         }
 
-        // Supplier filter logic
-        let currentSupplierFilter = '';
-        const supplierFilterEl = document.getElementById('supplier-filter');
-        
-        function populateSupplierDropdown() {
-          const suppliers = new Set();
-          areaObj.items.forEach(it => {
-            if(it.supplier && it.supplier.trim()) suppliers.add(it.supplier.trim());
-          });
-          const supplierOptions = Array.from(suppliers).sort();
-          if(supplierOptions.length > 0) {
-            supplierFilterEl.innerHTML = '<option value="">-- Semua Supplier --</option>' + 
-              supplierOptions.map(s => `<option value="${s}">${s}</option>`).join('');
-          }
-        }
-
-        // Removed: Form "Daftar Item" is now always visible
-        // Previously hidden when area had no items, now always shown for user convenience
+        // Supplier filter logic removed
 
         function renderItemsAndUpdateFilter() {
           renderItems();
-          populateSupplierDropdown();
-        }
-
-        if(supplierFilterEl) {
-          supplierFilterEl.addEventListener('change', function(e) {
-            currentSupplierFilter = this.value;
-            renderItems();
-          });
         }
 
         function renderItems(){
@@ -354,15 +383,7 @@
             return;
           }
           
-          // Filter items berdasarkan supplier yang dipilih
-          const filteredItems = currentSupplierFilter 
-            ? areaObj.items.filter(it => it.supplier === currentSupplierFilter)
-            : areaObj.items;
-          
-          if(filteredItems.length === 0) {
-            itemsEl.innerHTML = '<p style="color:#999;">Tidak ada item dari supplier ini.</p>';
-            return;
-          }
+          const filteredItems = areaObj.items;
           
           let html = '<table style="width:100%; border-collapse:collapse;">';
           html += '<thead><tr style="background:rgba(245,245,245,0.15); border-bottom:2px solid #ffd700;"><th style="width:48px; text-align:center; padding:8px;">NO</th><th style="min-width:120px; text-align:left; padding:8px;">NAMA BARANG</th><th style="flex:1; min-width:80px; text-align:center; padding:8px;">VOLUME</th><th style="flex:1; min-width:80px; text-align:center; padding:8px;">SATUAN</th><th style="flex:1; min-width:100px; text-align:center; padding:8px;">SUPPLIER</th><th style="flex:1; min-width:100px; text-align:center; padding:8px;">TGL PENGIRIMAN</th><th style="flex:1; min-width:90px; text-align:center; padding:8px;">REALISASI</th><th style="flex:1; min-width:100px; text-align:left; padding:8px;">STATUS</th><th style="flex:2; min-width:200px; text-align:left; padding:8px;">NOTE</th><th style="flex:0 0 auto; width:50px; padding:4px;"></th></tr></thead><tbody>';
@@ -839,6 +860,244 @@
       const deleteBtn = document.getElementById('delete-area-btn');
       if(editBtn) editBtn.addEventListener('click', function(){ closeMenu(); });
       if(deleteBtn) deleteBtn.addEventListener('click', function(){ closeMenu(); });
+    })();
+
+    // Excel Import Setup
+    (function setupExcelImport(){
+      const importBtn = document.getElementById('import-excel-btn');
+      const importModal = document.getElementById('import-excel-modal');
+      const fileInput = document.getElementById('excel-file-input');
+      const chooseFileBtn = document.getElementById('excel-choose-file-btn');
+      const closeBtn = document.getElementById('close-import-excel-btn');
+      const cancelBtn = document.getElementById('import-cancel-btn');
+      const resetBtn = document.getElementById('import-reset-btn');
+      const nextBtn = document.getElementById('import-next-btn');
+      const confirmBtn = document.getElementById('import-confirm-btn');
+      const fileNameDisplay = document.getElementById('excel-file-name');
+      const fileNameText = document.getElementById('excel-file-text');
+      
+      let excelData = [];
+      let excelColumns = [];
+      
+      // Show import button only for admin users
+      if(isAdminUser() && importBtn){
+        importBtn.style.display = 'block';
+      }
+      
+      // Open modal
+      if(importBtn){
+        importBtn.addEventListener('click', function(){
+          resetImportModal();
+          openModal(importModal);
+        });
+      }
+      
+      // Close modal
+      if(closeBtn) closeBtn.addEventListener('click', function(){ closeModal(importModal); });
+      if(cancelBtn) cancelBtn.addEventListener('click', function(){ closeModal(importModal); });
+      if(importModal) importModal.addEventListener('click', function(e){ if(e.target===importModal) closeModal(importModal); });
+      
+      // Reset modal
+      if(resetBtn) resetBtn.addEventListener('click', function(){ resetImportModal(); });
+      
+      function resetImportModal(){
+        document.getElementById('import-step-1').style.display = 'block';
+        document.getElementById('import-step-2').style.display = 'none';
+        document.getElementById('import-step-3').style.display = 'none';
+        fileNameDisplay.style.display = 'none';
+        fileInput.value = '';
+        nextBtn.style.display = 'none';
+        confirmBtn.style.display = 'none';
+        excelData = [];
+        excelColumns = [];
+      }
+      
+      // Choose file
+      if(chooseFileBtn){
+        chooseFileBtn.addEventListener('click', function(){ 
+          fileInput.click(); 
+        });
+      }
+      
+      // Handle file selection
+      if(fileInput){
+        fileInput.addEventListener('change', function(e){
+          const file = e.target.files[0];
+          if(!file) return;
+          
+          fileNameText.textContent = file.name;
+          fileNameDisplay.style.display = 'block';
+          
+          // Parse Excel file
+          const reader = new FileReader();
+          reader.onload = function(event){
+            try {
+              const workbook = XLSX.read(event.target.result, {type: 'array'});
+              const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+              const jsonData = XLSX.utils.sheet_to_json(firstSheet, {defval: '', blankrows: false});
+              
+              if(jsonData.length === 0){
+                alert('File Excel kosong atau tidak ada data');
+                fileInput.value = '';
+                fileNameDisplay.style.display = 'none';
+                return;
+              }
+              
+              excelData = jsonData;
+              excelColumns = Object.keys(jsonData[0]);
+              
+              // Show step 2
+              document.getElementById('import-step-1').style.display = 'none';
+              document.getElementById('import-step-2').style.display = 'block';
+              nextBtn.style.display = 'block';
+              
+              // Populate column dropdowns
+              populateColumnMappings();
+              
+            } catch(err){
+              alert('Error parsing Excel: ' + err.message);
+              fileInput.value = '';
+              fileNameDisplay.style.display = 'none';
+            }
+          };
+          reader.readAsArrayBuffer(file);
+        });
+      }
+      
+      function populateColumnMappings(){
+        const selects = ['map-name', 'map-volume', 'map-unit'];
+        selects.forEach(selectId => {
+          const select = document.getElementById(selectId);
+          select.innerHTML = '<option value="">-- Pilih Kolom --</option>';
+          excelColumns.forEach(col => {
+            const option = document.createElement('option');
+            option.value = col;
+            option.textContent = col;
+            select.appendChild(option);
+          });
+        });
+        
+        // Try to auto-map columns
+        tryAutoMapColumns();
+      }
+      
+      function tryAutoMapColumns(){
+        const mappings = {
+          'map-name': ['Nama', 'nama barang', 'item', 'produk', 'barang'],
+          'map-volume': ['Volume', 'volume', 'qty', 'jumlah', 'quantity'],
+          'map-unit': ['Satuan', 'satuan', 'unit']
+        };
+        
+        for(let selectId in mappings){
+          const select = document.getElementById(selectId);
+          const patterns = mappings[selectId];
+          for(let col of excelColumns){
+            const colLower = col.toLowerCase();
+            for(let pattern of patterns){
+              if(colLower.includes(pattern.toLowerCase())){
+                select.value = col;
+                break;
+              }
+            }
+          }
+        }
+      }
+      
+      // Next button - show preview
+      if(nextBtn){
+        nextBtn.addEventListener('click', function(){
+          const mapName = document.getElementById('map-name').value;
+          if(!mapName){
+            alert('Kolom "Nama Barang" harus dipilih');
+            return;
+          }
+          
+          document.getElementById('import-step-2').style.display = 'none';
+          document.getElementById('import-step-3').style.display = 'block';
+          nextBtn.style.display = 'none';
+          confirmBtn.style.display = 'block';
+          
+          showPreview();
+        });
+      }
+      
+      function showPreview(){
+        const previewTable = document.getElementById('import-preview-table');
+        const mapName = document.getElementById('map-name').value;
+        const mapVolume = document.getElementById('map-volume').value;
+        const mapUnit = document.getElementById('map-unit').value;
+        const mapSupplier = document.getElementById('map-supplier').value;
+        const mapDate = document.getElementById('map-date').value;
+        const mapClient = document.getElementById('map-client').value;
+        
+        let html = '<table style="width:100%; border-collapse:collapse;">';
+        html += '<thead><tr style="background:#f0f0f0; border-bottom:2px solid #ddd;">';
+        html += '<th style="padding:8px; text-align:left; border:1px solid #ddd; font-weight:bold;">Nama Barang</th>';
+        html += '<th style="padding:8px; text-align:center; border:1px solid #ddd; font-weight:bold;">Volume</th>';
+        html += '<th style="padding:8px; text-align:center; border:1px solid #ddd; font-weight:bold;">Satuan</th>';
+        html += '</tr></thead><tbody>';
+        
+        const preview = excelData.slice(0, 5);
+        preview.forEach(row => {
+          html += '<tr style="border-bottom:1px solid #ddd;">';
+          html += `<td style="padding:8px; border:1px solid #ddd; font-size:12px;">${row[mapName] || '-'}</td>`;
+          html += `<td style="padding:8px; border:1px solid #ddd; text-align:center; font-size:12px;">${row[mapVolume] || '-'}</td>`;
+          html += `<td style="padding:8px; border:1px solid #ddd; text-align:center; font-size:12px;">${row[mapUnit] || '-'}</td>`;
+          html += '</tr>';
+        });
+        
+        html += `<tr style="background:#f9f9f9; border-top:2px solid #ddd;"><td colspan="3
+      
+      // Confirm import
+      if(confirmBtn){
+        confirmBtn.addEventListener('click', function(){
+          const mapName = document.getElementById('map-name').value;
+          const mapVolume = document.getElementById('map-volume').value;
+          const mapUnit = document.getElementById('map-unit').value;
+          const mapSupplier = document.getElementById('map-supplier').value;
+          const mapDate = document.getElementById('map-date').value;
+          const mapClient = document.getElementById('map-client').value;
+          
+          let addedCount = 0;
+          excelData.forEach(row => {
+            const itemName = (row[mapName] || '').trim();
+            if(!itemName) return; // Skip empty names
+            
+            // Check if item already exists
+            const exists = areaObj.items.some(it => it.name.toLowerCase() === itemName.toLowerCase());
+            if(exists) return; // Skip duplicates
+          
+          let addedCount = 0;
+          excelData.forEach(row => {
+            const itemName = (row[mapName] || '').trim();
+            if(!itemName) return; // Skip empty names
+            
+            // Check if item already exists
+            const exists = areaObj.items.some(it => it.name.toLowerCase() === itemName.toLowerCase());
+            if(exists) return; // Skip duplicates
+            
+            const newItem = {
+              name: itemName,
+              unit: (row[mapUnit] || '').trim(),
+              volume: (row[mapVolume] || '').trim(),
+              supplier: '',
+              tanggal_pengiriman: '',
+              client: ''itambahkan (kemungkinan semua duplikat atau kosong)');
+            return;
+          }
+          
+          // Save to localStorage
+          map[projectName] = areaList;
+          localStorage.setItem('kans_project_areas', JSON.stringify(map));
+          
+          // Update UI
+          renderItemsAndUpdateFilter();
+          infoEl.innerHTML = `<p><strong>Jumlah item:</strong> ${areaObj.items.length}</p>`;
+          
+          closeModal(importModal);
+          alert(`✓ ${addedCount} item berhasil diimpor dari Excel`);
+        });
+      }
     })();
   </script>
 </body>
