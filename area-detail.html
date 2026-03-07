@@ -123,6 +123,11 @@
           
           <!-- Step 2: Column Mapping -->
           <div id="import-step-2" style="display:none; margin-top:20px;">
+            <div id="detection-summary" style="padding:12px; background:#e8f5e9; border:1px solid #4caf50; border-radius:4px; margin-bottom:16px; font-size:12px;">
+              <p style="margin:0 0 8px 0; color:#2e7d32; font-weight:bold;">✓ Deteksi Otomatis:</p>
+              <p id="detection-text" style="margin:0; color:#333; font-family:monospace;"></p>
+            </div>
+            
             <p style="margin:0 0 12px 0; font-size:13px; color:#666;"><strong>Pilih kolom Excel yang sesuai dengan field item:</strong></p>
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
               <div style="display:flex; flex-direction:column;">
@@ -1065,17 +1070,51 @@
               
               const workbook = XLSX.read(event.target.result, {type: 'array'});
               const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-              const jsonData = XLSX.utils.sheet_to_json(firstSheet, {defval: '', blankrows: false});
               
-              if(jsonData.length === 0){
-                alert('File Excel kosong atau tidak ada data');
+              // Get raw cell data to detect structure smartly
+              const range = XLSX.utils.decode_range(firstSheet['!ref']);
+              console.log('Sheet range:', range);
+              
+              // Scan for header row and data structure
+              const detectionResult = detectExcelStructure(firstSheet, range);
+              console.log('Detection result:', detectionResult);
+              
+              if(!detectionResult.success){
+                alert(detectionResult.message);
                 fileInput.value = '';
                 fileNameDisplay.style.display = 'none';
                 return;
               }
               
-              excelData = jsonData;
-              excelColumns = Object.keys(jsonData[0]);
+              // Use detected header row to parse data
+              const jsonData = XLSX.utils.sheet_to_json(firstSheet, {
+                defval: '', 
+                blankrows: false,
+                header: detectionResult.headerRow
+              });
+              
+              // Filter out empty rows
+              excelData = jsonData.filter((row, idx) => {
+                // Skip if row is completely empty
+                const hasValue = Object.values(row).some(val => val && String(val).trim());
+                return hasValue;
+              });
+              
+              if(excelData.length === 0){
+                alert('File Excel kosong atau tidak ada data yang valid');
+                fileInput.value = '';
+                fileNameDisplay.style.display = 'none';
+                return;
+              }
+              
+              excelColumns = Object.keys(excelData[0]);
+              
+              console.log('Processed:', {
+                totalRows: excelData.length,
+                columns: excelColumns,
+                startRow: detectionResult.dataStartRow,
+                headerRow: detectionResult.headerRow
+              });
               
               // Show step 2
               document.getElementById('import-step-1').style.display = 'none';
@@ -1086,6 +1125,7 @@
               populateColumnMappings();
               
             } catch(err){
+              console.error('Excel parsing error:', err);
               alert('Error parsing Excel: ' + err.message);
               fileInput.value = '';
               fileNameDisplay.style.display = 'none';
@@ -1095,7 +1135,71 @@
         });
       }
       
+      function detectExcelStructure(sheet, range){
+        console.log('=== Smart Excel Structure Detection ===');
+        
+        // Check each row until we find one that looks like headers
+        let headerRowIndex = 0;
+        let headerRow = [];
+        let dataStartRow = 0;
+        
+        // Scan first 10 rows to find potential header
+        for(let row = range.s.r; row <= Math.min(range.e.r, range.s.r + 10); row++){
+          let rowData = [];
+          let nonEmptyCount = 0;
+          
+          for(let col = range.s.c; col <= range.e.c; col++){
+            const cellAddress = XLSX.utils.encode_col(col) + (row + 1);
+            const cell = sheet[cellAddress];
+            const value = cell ? String(cell.v || '').trim() : '';
+            rowData.push(value);
+            if(value) nonEmptyCount++;
+          }
+          
+          console.log(`Row ${row}: [${rowData.join(' | ')}] (${nonEmptyCount} cols)`);
+          
+          // Found potential header if:
+          // 1. Has at least 2 non-empty cells
+          // 2. Contains keywords like nama, volume, satuan, item, dll
+          const headerKeywords = ['nama', 'volume', 'satuan', 'unit', 'qty', 'barang', 'item', 'jumlah'];
+          const hasHeaderKeyword = rowData.some(cell => {
+            const cellLower = cell.toLowerCase();
+            return headerKeywords.some(kw => cellLower.includes(kw));
+          });
+          
+          if(nonEmptyCount >= 2 && (hasHeaderKeyword || row === range.s.r)){
+            headerRowIndex = row;
+            headerRow = rowData;
+            dataStartRow = row + 1;
+            console.log(`✓ Header detected at row ${row}: [${headerRow.join(' | ')}]`);
+            break;
+          }
+        }
+        
+        if(headerRow.length === 0){
+          return {
+            success: false,
+            message: 'Tidak dapat mendeteksi header kolom dalam Excel. Pastikan baris pertama/kedua berisi nama kolom.'
+          };
+        }
+        
+        return {
+          success: true,
+          headerRow: headerRow,
+          headerRowIndex: headerRowIndex,
+          dataStartRow: dataStartRow
+        };
+      }
+      
       function populateColumnMappings(){
+        // Show detection summary
+        const summaryText = document.getElementById('detection-text');
+        summaryText.innerHTML = `
+          <strong>Baris data:</strong> ${excelData.length} item<br>
+          <strong>Kolom terdeteksi:</strong> ${excelColumns.join(', ')}<br>
+          <strong>Sampel data:</strong> ${excelData.slice(0, 2).map(r => '['+ excelColumns.map(c => r[c] || '-').join(' | ') + ']').join(' ... ')}
+        `;
+        
         const selects = ['map-name', 'map-volume', 'map-unit'];
         selects.forEach(selectId => {
           const select = document.getElementById(selectId);
@@ -1140,71 +1244,97 @@
       }
       
       function tryAutoMapColumns(){
-        console.log('=== Auto-detect starting ===');
+        console.log('=== Auto-detect starting (smart) ===');
         console.log('Available Excel columns:', excelColumns);
+        console.log('Sample data:', excelData.slice(0, 3));
         
+        // Analyze each column to understand its content
+        const columnScores = {};
+        
+        excelColumns.forEach(col => {
+          columnScores[col] = {
+            nameScore: 0,      // How likely it's Nama Barang
+            volumeScore: 0,    // How likely it's Volume
+            unitScore: 0       // How likely it's Satuan
+          };
+          
+          // Analyze column header
+          const headerLower = col.toLowerCase();
+          const namePatterns = ['nama barang', 'nama item', 'nama produk', 'nama', 'barang', 'item', 'produk', 'name', 'product'];
+          const volumePatterns = ['volume', 'jumlah', 'qty', 'quantity', 'vol', 'jml', 'banyaknya', 'amount'];
+          const unitPatterns = ['satuan', 'unit', 'uom', 'pcs'];
+          
+          namePatterns.forEach(p => {
+            if(headerLower.includes(p)) columnScores[col].nameScore += 10;
+          });
+          volumePatterns.forEach(p => {
+            if(headerLower.includes(p)) columnScores[col].volumeScore += 10;
+          });
+          unitPatterns.forEach(p => {
+            if(headerLower.includes(p)) columnScores[col].unitScore += 10;
+          });
+          
+          // Analyze sample data
+          const sampleValues = excelData.slice(0, 5).map(r => String(r[col] || '').trim()).filter(v => v);
+          
+          sampleValues.forEach(val => {
+            const valLower = val.toLowerCase();
+            
+            // Check if value looks like name (contains letters, not just numbers)
+            if(/[a-z]/.test(valLower) && val.length > 2){
+              columnScores[col].nameScore += 5;
+            }
+            
+            // Check if value looks like number (volume)
+            if(/^\d+(\.\d+)?$/.test(val)){
+              columnScores[col].volumeScore += 8;
+            }
+            
+            // Check if value is short and looks like unit
+            if(val.length <= 10 && /^[a-z0-9]+$/i.test(val) && !/\s/.test(val)){
+              columnScores[col].unitScore += 5;
+            }
+            
+            // Check common unit values
+            const unitValues = ['pcs', 'box', 'set', 'unit', 'kg', 'gram', 'liter', 'meter', 'roll', 'piece', 'pc', 'bks', 'dus', 'ikat'];
+            if(unitValues.includes(valLower)){
+              columnScores[col].unitScore += 15;
+            }
+          });
+        });
+        
+        console.log('Column scores:', columnScores);
+        
+        // Map columns based on highest scores
         const mappings = {
-          'map-name': [
-            'nama barang', 'nama item', 'nama produk',
-            'nama', 'barang', 'item', 'produk',
-            'name', 'product', 'item name', 'product name',
-            'deskripsi barang', 'keterangan barang', 'product name'
-          ],
-          'map-volume': [
-            'volume', 'jumlah', 'qty', 'quantity',
-            'vol', 'jml', 'quantity ordered', 'jumlah order',
-            'banyaknya', 'amount', 'total'
-          ],
-          'map-unit': [
-            'satuan', 'unit', 'uom',
-            'unit of measure', 'unit satuan',
-            'kemasan', 'ukuran', 'pcs', 'unit'
-          ]
+          'map-name': 'nameScore',
+          'map-volume': 'volumeScore',
+          'map-unit': 'unitScore'
         };
         
         let allMapped = true;
         
         for(let selectId in mappings){
+          const scoreKey = mappings[selectId];
           const select = document.getElementById(selectId);
-          if(!select){
-            console.warn(`Select element ${selectId} not found`);
-            continue;
-          }
+          if(!select) continue;
           
-          const patterns = mappings[selectId];
-          let foundMatch = false;
-          let matchedColumn = '';
+          // Find column with highest score
+          let bestCol = '';
+          let bestScore = 0;
           
-          for(let col of excelColumns){
-            const colLower = col.toLowerCase().trim();
-            
-            for(let pattern of patterns){
-              const patternLower = pattern.toLowerCase();
-              
-              // Exact match first
-              if(colLower === patternLower){
-                select.value = col;
-                foundMatch = true;
-                matchedColumn = col;
-                console.log(`✓ ${selectId}: exact match "${col}"`);
-                break;
-              }
-              // Partial match (flexible)
-              else if(colLower.includes(patternLower) || patternLower.includes(colLower)){
-                if(!foundMatch){ // take first partial match
-                  select.value = col;
-                  foundMatch = true;
-                  matchedColumn = col;
-                  console.log(`✓ ${selectId}: partial match "${col}" (pattern: "${pattern}")`);
-                }
-              }
+          excelColumns.forEach(col => {
+            if(columnScores[col][scoreKey] > bestScore){
+              bestScore = columnScores[col][scoreKey];
+              bestCol = col;
             }
-            
-            if(foundMatch) break;
-          }
+          });
           
-          if(!foundMatch){
-            console.warn(`⚠ ${selectId}: no match found. Patterns: ${patterns.join(', ')}`);
+          if(bestCol && bestScore > 0){
+            select.value = bestCol;
+            console.log(`✓ ${selectId}: "${bestCol}" (score: ${bestScore})`);
+          } else {
+            console.warn(`⚠ ${selectId}: no good match found`);
             allMapped = false;
           }
         }
