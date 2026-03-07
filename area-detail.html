@@ -1074,6 +1074,33 @@
         tryAutoMapColumns();
       }
       
+      function showPreview(){
+        const previewTable = document.getElementById('import-preview-table');
+        const mapName = document.getElementById('map-name').value;
+        const mapVolume = document.getElementById('map-volume').value;
+        const mapUnit = document.getElementById('map-unit').value;
+        
+        let html = '<table style="width:100%; border-collapse:collapse;">';
+        html += '<thead><tr style="background:#f0f0f0; border-bottom:2px solid #ddd;">';
+        html += '<th style="padding:8px; text-align:left; border:1px solid #ddd; font-weight:bold;">Nama Barang</th>';
+        html += '<th style="padding:8px; text-align:center; border:1px solid #ddd; font-weight:bold;">Volume</th>';
+        html += '<th style="padding:8px; text-align:center; border:1px solid #ddd; font-weight:bold;">Satuan</th>';
+        html += '</tr></thead><tbody>';
+        
+        const preview = excelData.slice(0, 5);
+        preview.forEach(row => {
+          html += '<tr style="border-bottom:1px solid #ddd;">';
+          html += `<td style="padding:8px; border:1px solid #ddd; font-size:12px;">${row[mapName] || '-'}</td>`;
+          html += `<td style="padding:8px; border:1px solid #ddd; text-align:center; font-size:12px;">${row[mapVolume] || '-'}</td>`;
+          html += `<td style="padding:8px; border:1px solid #ddd; text-align:center; font-size:12px;">${row[mapUnit] || '-'}</td>`;
+          html += '</tr>';
+        });
+        
+        html += `<tr style="background:#f9f9f9; border-top:2px solid #ddd;"><td colspan="3" style="padding:8px; font-size:11px; color:#666; text-align:center;"><strong>${excelData.length}</strong> baris data akan diimpor</td></tr>`;
+        html += '</tbody></table>';
+        previewTable.innerHTML = html;
+      }
+      
       function tryAutoMapColumns(){
         const mappings = {
           'map-name': [
@@ -1147,33 +1174,6 @@
           
           showPreview();
         });
-      }
-      
-      function showPreview(){
-        const previewTable = document.getElementById('import-preview-table');
-        const mapName = document.getElementById('map-name').value;
-        const mapVolume = document.getElementById('map-volume').value;
-        const mapUnit = document.getElementById('map-unit').value;
-        
-        let html = '<table style="width:100%; border-collapse:collapse;">';
-        html += '<thead><tr style="background:#f0f0f0; border-bottom:2px solid #ddd;">';
-        html += '<th style="padding:8px; text-align:left; border:1px solid #ddd; font-weight:bold;">Nama Barang</th>';
-        html += '<th style="padding:8px; text-align:center; border:1px solid #ddd; font-weight:bold;">Volume</th>';
-        html += '<th style="padding:8px; text-align:center; border:1px solid #ddd; font-weight:bold;">Satuan</th>';
-        html += '</tr></thead><tbody>';
-        
-        const preview = excelData.slice(0, 5);
-        preview.forEach(row => {
-          html += '<tr style="border-bottom:1px solid #ddd;">';
-          html += `<td style="padding:8px; border:1px solid #ddd; font-size:12px;">${row[mapName] || '-'}</td>`;
-          html += `<td style="padding:8px; border:1px solid #ddd; text-align:center; font-size:12px;">${row[mapVolume] || '-'}</td>`;
-          html += `<td style="padding:8px; border:1px solid #ddd; text-align:center; font-size:12px;">${row[mapUnit] || '-'}</td>`;
-          html += '</tr>';
-        });
-        
-        html += `<tr style="background:#f9f9f9; border-top:2px solid #ddd;"><td colspan="3" style="padding:8px; font-size:11px; color:#666; text-align:center;"><strong>${excelData.length}</strong> baris data akan diimpor</td></tr>`;
-        html += '</tbody></table>';
-        previewTable.innerHTML = html;
       }
       
       // Confirm import
