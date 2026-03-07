@@ -168,27 +168,63 @@
           <button type="button" id="close-import-pdf-btn" style="position:absolute; top:12px; right:16px; background:none; border:none; font-size:28px; cursor:pointer; color:#999; padding:0; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">×</button>
           <h3 id="import-pdf-title" style="margin-bottom:20px;">Impor Data dari PDF</h3>
           
-          <div style="padding:20px; border:2px dashed #ddd; border-radius:8px; text-align:center; background:#f9f9f9;">
-            <p style="margin:0 0 12px 0; font-size:14px; color:#333;"><strong>Pilih file PDF</strong></p>
-            <input type="file" id="pdf-file-input" accept=".pdf" style="display:none;">
-            <button type="button" id="pdf-choose-file-btn" style="padding:10px 20px; background:#e74c3c; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">📁 Pilih File</button>
-            <p style="margin:12px 0 0 0; font-size:12px; color:#999;">Format: PDF</p>
+          <!-- Step 1: File Upload -->
+          <div id="pdf-step-1" style="display:block;">
+            <div style="padding:20px; border:2px dashed #ddd; border-radius:8px; text-align:center; background:#f9f9f9;">
+              <p style="margin:0 0 12px 0; font-size:14px; color:#333;"><strong>Pilih file PDF yang berisi tabel</strong></p>
+              <input type="file" id="pdf-file-input" accept=".pdf" style="display:none;">
+              <button type="button" id="pdf-choose-file-btn" style="padding:10px 20px; background:#e74c3c; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">📁 Pilih File</button>
+              <p style="margin:12px 0 0 0; font-size:12px; color:#999;">Format: PDF dengan tabel yang terstruktur</p>
+            </div>
+            <div id="pdf-file-name" style="margin-top:12px; padding:10px; background:#f8e8e8; border-radius:4px; display:none; font-size:12px; color:#333;">
+              File dipilih: <strong id="pdf-file-text"></strong>
+            </div>
           </div>
           
-          <div id="pdf-file-name" style="margin-top:12px; padding:10px; background:#f8e8e8; border-radius:4px; display:none; font-size:12px; color:#333;">
-            File dipilih: <strong id="pdf-file-text"></strong>
+          <!-- Step 2: Text Preview & Edit -->
+          <div id="pdf-step-2" style="display:none; margin-top:20px;">
+            <p style="margin:0 0 12px 0; font-size:13px; color:#666;"><strong>Teks yang diekstrak dari PDF (edit jika perlu):</strong></p>
+            <textarea id="pdf-text-area" style="width:100%; height:200px; padding:12px; border:1px solid #ddd; border-radius:4px; font-family:monospace; font-size:11px; resize:vertical;"></textarea>
+            <p style="margin:12px 0 0 0; font-size:11px; color:#999;">Teks di atas disalin dari PDF. Setiap baris harus berisi: Nama | Volume | Satuan (dipisahkan spasi, tab, atau koma)</p>
           </div>
           
-          <div id="pdf-preview-content" style="margin-top:20px; display:none;">
-            <p style="margin:0 0 12px 0; font-size:13px; color:#666;"><strong>Teks yang diekstrak dari PDF:</strong></p>
-            <textarea id="pdf-text-area" style="width:100%; height:300px; padding:12px; border:1px solid #ddd; border-radius:4px; font-family:monospace; font-size:11px; resize:vertical;"></textarea>
-            <p style="margin:12px 0 0 0; font-size:11px; color:#999;">Teks di atas disalin dari PDF. Edit sesuai kebutuhan untuk memastikan format benar sebelum diproses.</p>
+          <!-- Step 3: Column Mapping (after parsing) -->
+          <div id="pdf-step-3" style="display:none; margin-top:20px;">
+            <p style="margin:0 0 12px 0; font-size:13px; color:#666;"><strong>Pilih kolom PDF yang sesuai dengan field item:</strong></p>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+              <div style="display:flex; flex-direction:column;">
+                <label style="font-size:12px; font-weight:bold; margin-bottom:4px; color:#333;">Nama Barang *</label>
+                <select id="pdf-map-name" style="padding:8px; border:1px solid #ddd; border-radius:4px; font-family:Arial;">
+                  <option value="">-- Pilih Kolom --</option>
+                </select>
+              </div>
+              <div style="display:flex; flex-direction:column;">
+                <label style="font-size:12px; font-weight:bold; margin-bottom:4px; color:#333;">Volume</label>
+                <select id="pdf-map-volume" style="padding:8px; border:1px solid #ddd; border-radius:4px; font-family:Arial;">
+                  <option value="">-- Pilih Kolom --</option>
+                </select>
+              </div>
+              <div style="display:flex; flex-direction:column;">
+                <label style="font-size:12px; font-weight:bold; margin-bottom:4px; color:#333;">Satuan</label>
+                <select id="pdf-map-unit" style="padding:8px; border:1px solid #ddd; border-radius:4px; font-family:Arial;">
+                  <option value="">-- Pilih Kolom --</option>
+                </select>
+              </div>
+            </div>
           </div>
           
+          <!-- Step 4: Preview Data -->
+          <div id="pdf-step-4" style="display:none; margin-top:20px;">
+            <p style="margin:0 0 12px 0; font-size:13px; color:#666;"><strong>Preview Data (5 baris pertama):</strong></p>
+            <div id="pdf-import-preview-table" style="overflow-x:auto; max-height:300px; border:1px solid #ddd; border-radius:4px; background:#fff;"></div>
+          </div>
+          
+          <!-- Action Buttons -->
           <div class="modal-actions" style="margin-top:24px; display:flex; gap:8px; justify-content:flex-end;">
             <button type="button" id="pdf-cancel-btn" class="btn cancel">Batal</button>
             <button type="button" id="pdf-reset-btn" class="btn" style="background:#999; color:#fff; border:none; cursor:pointer; padding:8px 16px; border-radius:6px; display:none;">Reset</button>
-            <button type="button" id="pdf-process-btn" class="btn primary" style="display:none;">⚙️ Proses Teks</button>
+            <button type="button" id="pdf-next-btn" class="btn primary" style="display:none;">Lanjut</button>
+            <button type="button" id="pdf-confirm-btn" class="btn primary" style="display:none;">✓ Impor Sekarang</button>
           </div>
         </div>
       </div>
@@ -1304,11 +1340,14 @@
       const closePdfBtn = document.getElementById('close-import-pdf-btn');
       const cancelPdfBtn = document.getElementById('pdf-cancel-btn');
       const resetPdfBtn = document.getElementById('pdf-reset-btn');
-      const processPdfBtn = document.getElementById('pdf-process-btn');
+      const pdfNextBtn = document.getElementById('pdf-next-btn');
+      const pdfConfirmBtn = document.getElementById('pdf-confirm-btn');
       const pdfFileName = document.getElementById('pdf-file-name');
       const pdfFileText = document.getElementById('pdf-file-text');
-      const pdfPreviewContent = document.getElementById('pdf-preview-content');
       const pdfTextArea = document.getElementById('pdf-text-area');
+      
+      let pdfData = []; // Stores parsed data as array of objects
+      let pdfColumns = []; // Column names detected from PDF
       
       // Show button only for admin
       if(isAdminUser() && importPdfBtn){
@@ -1317,12 +1356,19 @@
       
       if(importPdfBtn){
         importPdfBtn.addEventListener('click', function(){
+          // Reset to step 1
+          document.getElementById('pdf-step-1').style.display = 'block';
+          document.getElementById('pdf-step-2').style.display = 'none';
+          document.getElementById('pdf-step-3').style.display = 'none';
+          document.getElementById('pdf-step-4').style.display = 'none';
           pdfFileName.style.display = 'none';
-          pdfPreviewContent.style.display = 'none';
-          resetPdfBtn.style.display = 'none';
-          processPdfBtn.style.display = 'none';
           pdfFileInput.value = '';
           pdfTextArea.value = '';
+          pdfData = [];
+          pdfColumns = [];
+          resetPdfBtn.style.display = 'none';
+          pdfNextBtn.style.display = 'none';
+          pdfConfirmBtn.style.display = 'none';
           openModal(pdfModal);
         });
       }
@@ -1333,12 +1379,18 @@
       
       if(resetPdfBtn){
         resetPdfBtn.addEventListener('click', function(){
+          document.getElementById('pdf-step-1').style.display = 'block';
+          document.getElementById('pdf-step-2').style.display = 'none';
+          document.getElementById('pdf-step-3').style.display = 'none';
+          document.getElementById('pdf-step-4').style.display = 'none';
           pdfFileName.style.display = 'none';
-          pdfPreviewContent.style.display = 'none';
-          resetPdfBtn.style.display = 'none';
-          processPdfBtn.style.display = 'none';
           pdfFileInput.value = '';
           pdfTextArea.value = '';
+          pdfData = [];
+          pdfColumns = [];
+          resetPdfBtn.style.display = 'none';
+          pdfNextBtn.style.display = 'none';
+          pdfConfirmBtn.style.display = 'none';
         });
       }
       
@@ -1351,6 +1403,7 @@
           const file = e.target.files[0];
           if(!file) return;
           
+          console.log('PDF file selected:', file.name);
           pdfFileText.textContent = file.name;
           pdfFileName.style.display = 'block';
           
@@ -1369,20 +1422,25 @@
                       pagesProcessed++;
                       
                       if(pagesProcessed === numPages){
+                        console.log('PDF text extracted, length:', textContent.length);
                         pdfTextArea.value = textContent;
-                        pdfPreviewContent.style.display = 'block';
+                        
+                        // Show step 2 (text edit)
+                        document.getElementById('pdf-step-2').style.display = 'block';
                         resetPdfBtn.style.display = 'block';
-                        processPdfBtn.style.display = 'block';
+                        pdfNextBtn.style.display = 'block';
                       }
                     });
                   });
                 }
               }).catch(err => {
+                console.error('PDF parsing error:', err);
                 alert('Error parsing PDF: ' + err.message);
                 pdfFileInput.value = '';
                 pdfFileName.style.display = 'none';
               });
             } catch(err){
+              console.error('PDF read error:', err);
               alert('Error: ' + err.message);
               pdfFileInput.value = '';
               pdfFileName.style.display = 'none';
@@ -1392,78 +1450,258 @@
         });
       }
       
-      if(processPdfBtn){
-        processPdfBtn.addEventListener('click', function(){
+      // Next button - parse text and show column mapping
+      if(pdfNextBtn){
+        pdfNextBtn.addEventListener('click', function(){
           const text = pdfTextArea.value.trim();
           if(!text){
             alert('Tidak ada teks untuk diproses');
             return;
           }
           
-          // Simple PDF text parsing - extract nama, volume, satuan
-          const lines = text.split('\n').filter(l => l.trim());
-          let itemsFound = [];
+          console.log('Parsing PDF text...');
           
-          // Try to parse structured data
-          lines.forEach(line => {
-            const parts = line.trim().split(/[\s\t,;]+/);
-            if(parts.length >= 2){
-              const name = parts[0];
-              if(name && name.length > 2){
-                itemsFound.push({
-                  name: name,
-                  volume: parts[1] || '',
-                  unit: parts[2] || '',
-                  text: line
-                });
-              }
+          // Parse lines: assume each line is "field1 field2 field3" or "field1|field2|field3"
+          const lines = text.split('\n').filter(l => l.trim());
+          pdfData = [];
+          pdfColumns = [];
+          
+          lines.forEach((line, idx) => {
+            // Try multiple separators
+            let parts = [];
+            if(line.includes('|')){
+              parts = line.split('|').map(p => p.trim()).filter(p => p);
+            } else if(line.includes('\t')){
+              parts = line.split('\t').map(p => p.trim()).filter(p => p);
+            } else if(line.includes(',')){
+              parts = line.split(',').map(p => p.trim()).filter(p => p);
+            } else {
+              // Split by multiple spaces
+              parts = line.trim().split(/\s{2,}|\s\s+/).filter(p => p.trim());
+              if(parts.length < 2) parts = line.trim().split(/\s+/); // Fallback to single space
+            }
+            
+            if(parts.length > 0){
+              const row = {};
+              parts.forEach((val, colIdx) => {
+                const colName = 'Col' + (colIdx + 1);
+                row[colName] = val;
+                if(!pdfColumns.includes(colName)) pdfColumns.push(colName);
+              });
+              pdfData.push(row);
             }
           });
           
-          if(itemsFound.length === 0){
-            alert('Tidak dapat mengekstrak data item dari PDF. Pastikan format: Nama Volume Satuan');
+          console.log('Parsed data:', {rows: pdfData.length, columns: pdfColumns});
+          
+          if(pdfData.length === 0){
+            alert('Tidak dapat mengekstrak data. Pastikan format benar: Nama | Volume | Satuan');
             return;
           }
           
-          // Add items to area
-          let addedCount = 0;
-          itemsFound.slice(0, 20).forEach(itemData => {
-            const itemName = itemData.name.trim();
-            if(!itemName) return;
-            
-            const exists = areaObj.items.some(it => it.name.toLowerCase() === itemName.toLowerCase());
-            if(exists) return;
-            
-            const newItem = {
-              name: itemName,
-              unit: itemData.unit.trim(),
-              volume: itemData.volume.trim(),
-              supplier: '',
-              tanggal_pengiriman: '',
-              client: '',
-              terkirim: '',
-              realisasi: '',
-              status: statusStages[0],
-              note: ''
-            };
-            
-            areaObj.items.push(newItem);
-            addedCount++;
+          // Populate dropdowns
+          const maps = ['pdf-map-name', 'pdf-map-volume', 'pdf-map-unit'];
+          maps.forEach(mapId => {
+            const select = document.getElementById(mapId);
+            if(select){
+              select.innerHTML = '<option value="">-- Pilih Kolom --</option>';
+              pdfColumns.forEach(col => {
+                const option = document.createElement('option');
+                option.value = col;
+                option.textContent = col;
+                select.appendChild(option);
+              });
+            }
           });
           
-          if(addedCount === 0){
-            alert('Tidak ada item baru yang dapat ditambahkan');
-            return;
+          // Try auto-detect
+          tryAutoMapPdfColumns();
+          
+          // Show step 3 (mapping)
+          document.getElementById('pdf-step-2').style.display = 'none';
+          document.getElementById('pdf-step-3').style.display = 'block';
+          pdfNextBtn.style.display = 'none';
+          document.getElementById('pdf-next-btn-2').style.display = 'block';
+        });
+      }
+      
+      function tryAutoMapPdfColumns(){
+        console.log('=== PDF Auto-detect starting ===');
+        console.log('Available PDF columns:', pdfColumns);
+        
+        const mappings = {
+          'pdf-map-name': ['nama barang', 'nama item', 'nama', 'barang', 'item', 'name', 'product', 'col1', 'column1'],
+          'pdf-map-volume': ['volume', 'jumlah', 'qty', 'quantity', 'vol', 'jml', 'col2', 'column2'],
+          'pdf-map-unit': ['satuan', 'unit', 'uom', 'pcs', 'col3', 'column3']
+        };
+        
+        for(let selectId in mappings){
+          const select = document.getElementById(selectId);
+          if(!select) continue;
+          
+          const patterns = mappings[selectId];
+          let foundMatch = false;
+          
+          for(let col of pdfColumns){
+            const colLower = col.toLowerCase().trim();
+            for(let pattern of patterns){
+              if(colLower === pattern || colLower.includes(pattern) || pattern.includes(colLower)){
+                select.value = col;
+                foundMatch = true;
+                console.log(`✓ ${selectId}: matched "${col}"`);
+                break;
+              }
+            }
+            if(foundMatch) break;
           }
           
-          map[projectName] = areaList;
-          localStorage.setItem('kans_project_areas', JSON.stringify(map));
-          
-          renderItemsAndUpdateFilter();
-          infoEl.innerHTML = `<p><strong>Jumlah item:</strong> ${areaObj.items.length}</p>`;
-          
-          closeModal(pdfModal);
-          alert(`✓ ${addedCount} item berhasil diimpor dari PDF`);
+          if(!foundMatch){
+            console.warn(`⚠ ${selectId}: no match`);
+          }
+        }
+      }
+      
+      function showPdfPreview(){
+        console.log('Showing PDF preview...');
+        const mapName = document.getElementById('pdf-map-name').value;
+        const mapVolume = document.getElementById('pdf-map-volume').value;
+        const mapUnit = document.getElementById('pdf-map-unit').value;
+        
+        if(!mapName){
+          alert('Error: Kolom "Nama Barang" belum dipilih');
+          return;
+        }
+        
+        const previewTable = document.getElementById('pdf-import-preview-table');
+        previewTable.innerHTML = '';
+        
+        // Create table
+        const table = document.createElement('table');
+        table.style.width = '100%';
+        table.style.borderCollapse = 'collapse';
+        
+        // Header
+        const headerRow = table.insertRow();
+        headerRow.style.background = '#f5f5f5';
+        [mapName, mapVolume, mapUnit].forEach(col => {
+          const th = document.createElement('th');
+          th.textContent = col;
+          th.style.padding = '8px';
+          th.style.textAlign = 'left';
+          th.style.borderBottom = '2px solid #ddd';
+          th.style.fontSize = '12px';
+          th.style.fontWeight = 'bold';
+          headerRow.appendChild(th);
+        });
+        
+        // Sample rows (first 5)
+        pdfData.slice(0, 5).forEach(row => {
+          const tr = table.insertRow();
+          tr.style.borderBottom = '1px solid #eee';
+          [mapName, mapVolume, mapUnit].forEach(col => {
+            const td = document.createElement('td');
+            td.textContent = row[col] || '';
+            td.style.padding = '8px';
+            td.style.fontSize = '11px';
+            tr.appendChild(td);
+          });
+        });
+        
+        previewTable.appendChild(table);
+        
+        // Show step 4 (preview)
+        document.getElementById('pdf-step-3').style.display = 'none';
+        document.getElementById('pdf-step-4').style.display = 'block';
+        document.getElementById('pdf-next-btn-2').style.display = 'none';
+        pdfConfirmBtn.style.display = 'block';
+      }
+      
+      // Add next button for step 3 (column mapping)
+      const pdfNextBtn2Div = document.querySelector('.modal-actions');
+      if(pdfNextBtn2Div && !document.getElementById('pdf-next-btn-2')){
+        const nextBtn2 = document.createElement('button');
+        nextBtn2.id = 'pdf-next-btn-2';
+        nextBtn2.className = 'btn primary';
+        nextBtn2.textContent = 'Lanjut';
+        nextBtn2.style.display = 'none';
+        nextBtn2.addEventListener('click', showPdfPreview);
+        pdfNextBtn2Div.insertBefore(nextBtn2, pdfConfirmBtn);
+      }
+      
+      // Confirm button - import data
+      if(pdfConfirmBtn){
+        pdfConfirmBtn.addEventListener('click', function(){
+          try {
+            console.log('PDF import confirm clicked');
+            
+            const mapName = document.getElementById('pdf-map-name').value;
+            const mapVolume = document.getElementById('pdf-map-volume').value;
+            const mapUnit = document.getElementById('pdf-map-unit').value;
+            
+            if(!mapName){
+              alert('Error: Kolom "Nama Barang" belum dipilih');
+              return;
+            }
+            
+            if(!areaObj){
+              alert('Error: Area data tidak ditemukan');
+              return;
+            }
+            
+            let addedCount = 0;
+            let skippedCount = 0;
+            
+            pdfData.forEach((row, idx) => {
+              const itemName = (row[mapName] ? String(row[mapName]) : '').trim();
+              
+              if(!itemName){
+                skippedCount++;
+                return;
+              }
+              
+              const exists = areaObj.items.some(it => it.name.toLowerCase() === itemName.toLowerCase());
+              if(exists){
+                skippedCount++;
+                return;
+              }
+              
+              const newItem = {
+                name: itemName,
+                unit: (row[mapUnit] ? String(row[mapUnit]) : '').trim(),
+                volume: (row[mapVolume] ? String(row[mapVolume]) : '').trim(),
+                supplier: '',
+                tanggal_pengiriman: '',
+                client: '',
+                terkirim: '',
+                realisasi: '',
+                status: statusStages[0],
+                note: ''
+              };
+              
+              areaObj.items.push(newItem);
+              addedCount++;
+            });
+            
+            console.log(`PDF import result: added=${addedCount}, skipped=${skippedCount}`);
+            
+            if(addedCount === 0){
+              alert(`Tidak ada item baru yang dapat ditambahkan.\n\n(${skippedCount} item sudah ada atau kosong)`);
+              return;
+            }
+            
+            map[projectName] = areaList;
+            localStorage.setItem('kans_project_areas', JSON.stringify(map));
+            
+            renderItemsAndUpdateFilter();
+            infoEl.innerHTML = `<p><strong>Jumlah item:</strong> ${areaObj.items.length}</p>`;
+            
+            closeModal(pdfModal);
+            alert(`✓ ${addedCount} item berhasil diimpor dari PDF`);
+            
+          } catch(err){
+            console.error('Error during PDF import:', err);
+            alert('Error saat mengimpor: ' + err.message);
+          }
         });
       }
     })();
