@@ -41,15 +41,9 @@
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
           <h3 style="margin:0;">Daftar Item :</h3>
           <div style="display:flex; gap:8px; align-items:center;">
-            <label style="font-size:12px; color:#666; font-weight:bold;">Sortir:</label>
-            <select id="sort-items-select" style="padding:6px 10px; border:1px solid #ddd; border-radius:4px; font-size:12px; background:#fff; cursor:pointer;">
-              <option value="default">Urutan Default</option>
-              <option value="nama-asc">Nama A-Z</option>
-              <option value="nama-desc">Nama Z-A</option>
-              <option value="volume-asc">Volume (Kecil-Besar)</option>
-              <option value="volume-desc">Volume (Besar-Kecil)</option>
-              <option value="realisasi-asc">Realisasi (Rendah-Tinggi)</option>
-              <option value="realisasi-desc">Realisasi (Tinggi-Rendah)</option>
+            <label style="font-size:12px; color:#666; font-weight:bold;">Filter Supplier:</label>
+            <select id="supplier-filter-select" style="padding:6px 10px; border:1px solid #ddd; border-radius:4px; font-size:12px; background:#fff; cursor:pointer;">
+              <option value="">-- Semua Supplier --</option>
             </select>
           </div>
         </div>
@@ -418,10 +412,34 @@
           return `<span class="status-badge" style="background:${color}; color:#fff; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold;">${status}</span>`;
         }
 
-        // Supplier filter logic removed
+        // Supplier filter logic
+        let currentSupplierFilter = '';
 
         function renderItemsAndUpdateFilter() {
+          updateSupplierFilterOptions();
           renderItems();
+        }
+
+        function updateSupplierFilterOptions(){
+          const supplierSet = new Set();
+          areaObj.items.forEach(item => {
+            if(item.supplier) supplierSet.add(item.supplier);
+          });
+          
+          const filterSelect = document.getElementById('supplier-filter-select');
+          if(!filterSelect) return;
+          
+          const currentValue = filterSelect.value;
+          filterSelect.innerHTML = '<option value="">-- Semua Supplier --</option>';
+          
+          Array.from(supplierSet).sort().forEach(supplier => {
+            const option = document.createElement('option');
+            option.value = supplier;
+            option.textContent = supplier;
+            filterSelect.appendChild(option);
+          });
+          
+          filterSelect.value = currentValue;
         }
 
         function renderItems(){
@@ -430,7 +448,16 @@
             return;
           }
           
-          const filteredItems = areaObj.items;
+          // Apply supplier filter
+          let filteredItems = areaObj.items;
+          if(currentSupplierFilter){
+            filteredItems = areaObj.items.filter(it => it.supplier === currentSupplierFilter);
+          }
+          
+          if(filteredItems.length === 0){
+            itemsEl.innerHTML = '<p style="color:#999;">Tidak ada item untuk supplier ini.</p>';
+            return;
+          }
           
           let html = '<table style="width:100%; border-collapse:collapse;">';
           html += '<thead><tr style="background:rgba(245,245,245,0.15); border-bottom:2px solid #ffd700;"><th style="width:48px; text-align:center; padding:8px;">NO</th><th style="min-width:120px; text-align:left; padding:8px;">NAMA BARANG</th><th style="flex:1; min-width:80px; text-align:center; padding:8px;">VOLUME</th><th style="flex:1; min-width:80px; text-align:center; padding:8px;">SATUAN</th><th style="flex:1; min-width:100px; text-align:center; padding:8px;">SUPPLIER</th><th style="flex:1; min-width:100px; text-align:center; padding:8px;">TGL PENGIRIMAN</th><th style="flex:1; min-width:90px; text-align:center; padding:8px;">REALISASI</th><th style="flex:1; min-width:100px; text-align:left; padding:8px;">STATUS</th><th style="flex:2; min-width:200px; text-align:left; padding:8px;">NOTE</th><th style="flex:0 0 auto; width:50px; padding:4px;"></th></tr></thead><tbody>';
@@ -909,70 +936,14 @@
       if(deleteBtn) deleteBtn.addEventListener('click', function(){ closeMenu(); });
     })();
 
-    // Sort Items Setup
-    (function setupSortItems(){
-      const sortSelect = document.getElementById('sort-items-select');
-      if(!sortSelect) return;
+    // Supplier Filter Setup
+    (function setupSupplierFilter(){
+      const filterSelect = document.getElementById('supplier-filter-select');
+      if(!filterSelect) return;
       
-      sortSelect.addEventListener('change', function(){
-        const sortValue = this.value;
-        if(!areaObj || !Array.isArray(areaObj.items)) return;
-        
-        let items = [...areaObj.items];
-        
-        switch(sortValue){
-          case 'nama-asc':
-            items.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-            break;
-          case 'nama-desc':
-            items.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
-            break;
-          case 'volume-asc':
-            items.sort((a, b) => {
-              const volA = parseFloat(a.volume) || 0;
-              const volB = parseFloat(b.volume) || 0;
-              return volA - volB;
-            });
-            break;
-          case 'volume-desc':
-            items.sort((a, b) => {
-              const volA = parseFloat(a.volume) || 0;
-              const volB = parseFloat(b.volume) || 0;
-              return volB - volA;
-            });
-            break;
-          case 'realisasi-asc':
-            items.sort((a, b) => {
-              const realA = (a.realisasi || '0%').replace('%', '');
-              const realB = (b.realisasi || '0%').replace('%', '');
-              return parseFloat(realA) - parseFloat(realB);
-            });
-            break;
-          case 'realisasi-desc':
-            items.sort((a, b) => {
-              const realA = (a.realisasi || '0%').replace('%', '');
-              const realB = (b.realisasi || '0%').replace('%', '');
-              return parseFloat(realB) - parseFloat(realA);
-            });
-            break;
-          default:
-            // Default order - reorder back to original
-            if(!areaObj || !Array.isArray(areaObj.items)) return;
-            break;
-        }
-        
-        // Temporarily reorder items for display
-        const originalItems = areaObj.items;
-        if(sortValue !== 'default'){
-          areaObj.items = items;
-        }
-        
+      filterSelect.addEventListener('change', function(){
+        currentSupplierFilter = this.value;
         renderItemsAndUpdateFilter();
-        
-        // Restore original order in data if not default
-        if(sortValue !== 'default'){
-          areaObj.items = originalItems;
-        }
       });
     })();
 
