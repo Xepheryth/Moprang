@@ -1104,29 +1104,40 @@
       }
       
       function tryAutoMapColumns(){
+        console.log('=== Auto-detect starting ===');
+        console.log('Available Excel columns:', excelColumns);
+        
         const mappings = {
           'map-name': [
             'nama barang', 'nama item', 'nama produk',
             'nama', 'barang', 'item', 'produk',
             'name', 'product', 'item name', 'product name',
-            'deskripsi barang', 'keterangan barang'
+            'deskripsi barang', 'keterangan barang', 'product name'
           ],
           'map-volume': [
             'volume', 'jumlah', 'qty', 'quantity',
             'vol', 'jml', 'quantity ordered', 'jumlah order',
-            'banyaknya', 'amount'
+            'banyaknya', 'amount', 'total'
           ],
           'map-unit': [
             'satuan', 'unit', 'uom',
             'unit of measure', 'unit satuan',
-            'kemasan', 'ukuran'
+            'kemasan', 'ukuran', 'pcs', 'unit'
           ]
         };
         
+        let allMapped = true;
+        
         for(let selectId in mappings){
           const select = document.getElementById(selectId);
+          if(!select){
+            console.warn(`Select element ${selectId} not found`);
+            continue;
+          }
+          
           const patterns = mappings[selectId];
           let foundMatch = false;
+          let matchedColumn = '';
           
           for(let col of excelColumns){
             const colLower = col.toLowerCase().trim();
@@ -1134,20 +1145,42 @@
             for(let pattern of patterns){
               const patternLower = pattern.toLowerCase();
               
-              // Exact match or close match
-              if(colLower === patternLower || 
-                 colLower.includes(patternLower) ||
-                 patternLower.includes(colLower)){
+              // Exact match first
+              if(colLower === patternLower){
                 select.value = col;
                 foundMatch = true;
+                matchedColumn = col;
+                console.log(`✓ ${selectId}: exact match "${col}"`);
                 break;
+              }
+              // Partial match (flexible)
+              else if(colLower.includes(patternLower) || patternLower.includes(colLower)){
+                if(!foundMatch){ // take first partial match
+                  select.value = col;
+                  foundMatch = true;
+                  matchedColumn = col;
+                  console.log(`✓ ${selectId}: partial match "${col}" (pattern: "${pattern}")`);
+                }
               }
             }
             
             if(foundMatch) break;
           }
+          
+          if(!foundMatch){
+            console.warn(`⚠ ${selectId}: no match found. Patterns: ${patterns.join(', ')}`);
+            allMapped = false;
+          }
         }
         
+        console.log('Auto-detect result: ' + (allMapped ? '✓ All fields mapped' : '⚠ Some fields not mapped'));
+        
+        // Auto-show preview if all 3 fields mapped
+        if(allMapped){
+          console.log('Calling showPreview() automatically...');
+          setTimeout(() => showPreview(), 100);
+        }
+      }
         // Auto-show preview if all required fields are selected
         const mapName = document.getElementById('map-name').value;
         if(mapName){
