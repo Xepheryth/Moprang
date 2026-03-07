@@ -1076,23 +1076,58 @@
       
       function tryAutoMapColumns(){
         const mappings = {
-          'map-name': ['Nama', 'nama barang', 'item', 'produk', 'barang'],
-          'map-volume': ['Volume', 'volume', 'qty', 'jumlah', 'quantity'],
-          'map-unit': ['Satuan', 'satuan', 'unit']
+          'map-name': [
+            'nama barang', 'nama item', 'nama produk',
+            'nama', 'barang', 'item', 'produk',
+            'name', 'product', 'item name', 'product name',
+            'deskripsi barang', 'keterangan barang'
+          ],
+          'map-volume': [
+            'volume', 'jumlah', 'qty', 'quantity',
+            'vol', 'jml', 'quantity ordered', 'jumlah order',
+            'banyaknya', 'amount'
+          ],
+          'map-unit': [
+            'satuan', 'unit', 'uom',
+            'unit of measure', 'unit satuan',
+            'kemasan', 'ukuran'
+          ]
         };
         
         for(let selectId in mappings){
           const select = document.getElementById(selectId);
           const patterns = mappings[selectId];
+          let foundMatch = false;
+          
           for(let col of excelColumns){
-            const colLower = col.toLowerCase();
+            const colLower = col.toLowerCase().trim();
+            
             for(let pattern of patterns){
-              if(colLower.includes(pattern.toLowerCase())){
+              const patternLower = pattern.toLowerCase();
+              
+              // Exact match or close match
+              if(colLower === patternLower || 
+                 colLower.includes(patternLower) ||
+                 patternLower.includes(colLower)){
                 select.value = col;
+                foundMatch = true;
                 break;
               }
             }
+            
+            if(foundMatch) break;
           }
+        }
+        
+        // Auto-show preview if all required fields are selected
+        const mapName = document.getElementById('map-name').value;
+        if(mapName){
+          // Automatically proceed to preview
+          document.getElementById('import-step-2').style.display = 'none';
+          document.getElementById('import-step-3').style.display = 'block';
+          document.getElementById('import-next-btn').style.display = 'none';
+          document.getElementById('import-confirm-btn').style.display = 'block';
+          showPreview();
         }
       }
       
