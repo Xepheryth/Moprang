@@ -24,7 +24,8 @@
       <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
         <div style="display:flex; gap:8px;">
           <button id="documents-area-btn" style="background:#3498db; border:none; color:#fff; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold; box-shadow:0 2px 6px rgba(0,0,0,0.08);">📄 Dokumen Pengadaan</button>
-          <button id="import-excel-btn" style="background:#27ae60; border:none; color:#fff; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold; box-shadow:0 2px 6px rgba(0,0,0,0.08); display:none;">📊 Impor dari Excel</button>
+          <button id="import-excel-btn" style="background:#27ae60; border:none; color:#fff; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold; box-shadow:0 2px 6px rgba(0,0,0,0.08); display:none;">📊 Import Excel</button>
+          <button id="import-pdf-btn" style="background:#e74c3c; border:none; color:#fff; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold; box-shadow:0 2px 6px rgba(0,0,0,0.08); display:none;">📕 Import PDF</button>
         </div>
         <div style="margin-left:auto; position:relative;">
           <button id="area-menu-btn" aria-haspopup="true" aria-expanded="false" title="Menu" style="background:#fff; border:1px solid #ffd700; color:#333; padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:bold; box-shadow:0 2px 6px rgba(0,0,0,0.08);">⋮</button>
@@ -37,7 +38,21 @@
       <div id="area-info" style="margin-top:16px;"></div>
 
       <section style="margin-top:18px;">
-        <h3 style="margin:0; margin-bottom:12px;">Daftar Item :</h3>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <h3 style="margin:0;">Daftar Item :</h3>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <label style="font-size:12px; color:#666; font-weight:bold;">Sortir:</label>
+            <select id="sort-items-select" style="padding:6px 10px; border:1px solid #ddd; border-radius:4px; font-size:12px; background:#fff; cursor:pointer;">
+              <option value="default">Urutan Default</option>
+              <option value="nama-asc">Nama A-Z</option>
+              <option value="nama-desc">Nama Z-A</option>
+              <option value="volume-asc">Volume (Kecil-Besar)</option>
+              <option value="volume-desc">Volume (Besar-Kecil)</option>
+              <option value="realisasi-asc">Realisasi (Rendah-Tinggi)</option>
+              <option value="realisasi-desc">Realisasi (Tinggi-Rendah)</option>
+            </select>
+          </div>
+        </div>
         <div id="items-list" style="margin-top:8px; margin-right:4px;"></div>
         <div id="add-item-section" style="margin-top:12px; display:grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; gap:8px; align-items:center;">
           <input id="new-item-name" placeholder="Nama item baru" style="padding:8px; border:1px solid #ddd; border-radius:4px;" />
@@ -153,6 +168,37 @@
         </div>
       </div>
 
+      <!-- Modal Impor PDF -->
+      <div id="import-pdf-modal" class="modal-overlay" aria-hidden="true" style="display:none; z-index:1001;">
+        <div class="modal-floating" role="dialog" aria-modal="true" aria-labelledby="import-pdf-title" style="max-width:900px; max-height:90vh; overflow-y:auto; position:relative;">
+          <button type="button" id="close-import-pdf-btn" style="position:absolute; top:12px; right:16px; background:none; border:none; font-size:28px; cursor:pointer; color:#999; padding:0; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">×</button>
+          <h3 id="import-pdf-title" style="margin-bottom:20px;">Impor Data dari PDF</h3>
+          
+          <div style="padding:20px; border:2px dashed #ddd; border-radius:8px; text-align:center; background:#f9f9f9;">
+            <p style="margin:0 0 12px 0; font-size:14px; color:#333;"><strong>Pilih file PDF</strong></p>
+            <input type="file" id="pdf-file-input" accept=".pdf" style="display:none;">
+            <button type="button" id="pdf-choose-file-btn" style="padding:10px 20px; background:#e74c3c; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">📁 Pilih File</button>
+            <p style="margin:12px 0 0 0; font-size:12px; color:#999;">Format: PDF</p>
+          </div>
+          
+          <div id="pdf-file-name" style="margin-top:12px; padding:10px; background:#f8e8e8; border-radius:4px; display:none; font-size:12px; color:#333;">
+            File dipilih: <strong id="pdf-file-text"></strong>
+          </div>
+          
+          <div id="pdf-preview-content" style="margin-top:20px; display:none;">
+            <p style="margin:0 0 12px 0; font-size:13px; color:#666;"><strong>Teks yang diekstrak dari PDF:</strong></p>
+            <textarea id="pdf-text-area" style="width:100%; height:300px; padding:12px; border:1px solid #ddd; border-radius:4px; font-family:monospace; font-size:11px; resize:vertical;"></textarea>
+            <p style="margin:12px 0 0 0; font-size:11px; color:#999;">Teks di atas disalin dari PDF. Edit sesuai kebutuhan untuk memastikan format benar sebelum diproses.</p>
+          </div>
+          
+          <div class="modal-actions" style="margin-top:24px; display:flex; gap:8px; justify-content:flex-end;">
+            <button type="button" id="pdf-cancel-btn" class="btn cancel">Batal</button>
+            <button type="button" id="pdf-reset-btn" class="btn" style="background:#999; color:#fff; border:none; cursor:pointer; padding:8px 16px; border-radius:6px; display:none;">Reset</button>
+            <button type="button" id="pdf-process-btn" class="btn primary" style="display:none;">⚙️ Proses Teks</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Modal Detail Item / PO -->
       <div id="item-detail-modal" class="modal-overlay" aria-hidden="true" style="display:none; z-index:1001;">
         <div class="modal-floating" role="dialog" aria-modal="true" aria-labelledby="item-detail-title" style="max-width:800px; max-height:90vh; overflow-y:auto; position:relative;">
@@ -227,6 +273,7 @@
 
   <script src="script.js?v=20260225-16"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script>
     // admin check: only these usernames may add/edit/delete (fallback)
     function isAdminUser(){ try{ const cur = localStorage.getItem('kans_current'); return cur === 'admin' || cur === 'admin2'; }catch(e){ return false; } }
@@ -862,6 +909,73 @@
       if(deleteBtn) deleteBtn.addEventListener('click', function(){ closeMenu(); });
     })();
 
+    // Sort Items Setup
+    (function setupSortItems(){
+      const sortSelect = document.getElementById('sort-items-select');
+      if(!sortSelect) return;
+      
+      sortSelect.addEventListener('change', function(){
+        const sortValue = this.value;
+        if(!areaObj || !Array.isArray(areaObj.items)) return;
+        
+        let items = [...areaObj.items];
+        
+        switch(sortValue){
+          case 'nama-asc':
+            items.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            break;
+          case 'nama-desc':
+            items.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+            break;
+          case 'volume-asc':
+            items.sort((a, b) => {
+              const volA = parseFloat(a.volume) || 0;
+              const volB = parseFloat(b.volume) || 0;
+              return volA - volB;
+            });
+            break;
+          case 'volume-desc':
+            items.sort((a, b) => {
+              const volA = parseFloat(a.volume) || 0;
+              const volB = parseFloat(b.volume) || 0;
+              return volB - volA;
+            });
+            break;
+          case 'realisasi-asc':
+            items.sort((a, b) => {
+              const realA = (a.realisasi || '0%').replace('%', '');
+              const realB = (b.realisasi || '0%').replace('%', '');
+              return parseFloat(realA) - parseFloat(realB);
+            });
+            break;
+          case 'realisasi-desc':
+            items.sort((a, b) => {
+              const realA = (a.realisasi || '0%').replace('%', '');
+              const realB = (b.realisasi || '0%').replace('%', '');
+              return parseFloat(realB) - parseFloat(realA);
+            });
+            break;
+          default:
+            // Default order - reorder back to original
+            if(!areaObj || !Array.isArray(areaObj.items)) return;
+            break;
+        }
+        
+        // Temporarily reorder items for display
+        const originalItems = areaObj.items;
+        if(sortValue !== 'default'){
+          areaObj.items = items;
+        }
+        
+        renderItemsAndUpdateFilter();
+        
+        // Restore original order in data if not default
+        if(sortValue !== 'default'){
+          areaObj.items = originalItems;
+        }
+      });
+    })();
+
     // Excel Import Setup
     (function setupExcelImport(){
       const importBtn = document.getElementById('import-excel-btn');
@@ -1096,6 +1210,179 @@
           
           closeModal(importModal);
           alert(`✓ ${addedCount} item berhasil diimpor dari Excel`);
+        });
+      }
+    })();
+
+    // PDF Import Setup
+    (function setupPdfImport(){
+      const importPdfBtn = document.getElementById('import-pdf-btn');
+      const pdfModal = document.getElementById('import-pdf-modal');
+      const pdfFileInput = document.getElementById('pdf-file-input');
+      const pdfChooseFileBtn = document.getElementById('pdf-choose-file-btn');
+      const closePdfBtn = document.getElementById('close-import-pdf-btn');
+      const cancelPdfBtn = document.getElementById('pdf-cancel-btn');
+      const resetPdfBtn = document.getElementById('pdf-reset-btn');
+      const processPdfBtn = document.getElementById('pdf-process-btn');
+      const pdfFileName = document.getElementById('pdf-file-name');
+      const pdfFileText = document.getElementById('pdf-file-text');
+      const pdfPreviewContent = document.getElementById('pdf-preview-content');
+      const pdfTextArea = document.getElementById('pdf-text-area');
+      
+      // Show button only for admin
+      if(isAdminUser() && importPdfBtn){
+        importPdfBtn.style.display = 'block';
+      }
+      
+      if(importPdfBtn){
+        importPdfBtn.addEventListener('click', function(){
+          pdfFileName.style.display = 'none';
+          pdfPreviewContent.style.display = 'none';
+          resetPdfBtn.style.display = 'none';
+          processPdfBtn.style.display = 'none';
+          pdfFileInput.value = '';
+          pdfTextArea.value = '';
+          openModal(pdfModal);
+        });
+      }
+      
+      if(closePdfBtn) closePdfBtn.addEventListener('click', function(){ closeModal(pdfModal); });
+      if(cancelPdfBtn) cancelPdfBtn.addEventListener('click', function(){ closeModal(pdfModal); });
+      if(pdfModal) pdfModal.addEventListener('click', function(e){ if(e.target===pdfModal) closeModal(pdfModal); });
+      
+      if(resetPdfBtn){
+        resetPdfBtn.addEventListener('click', function(){
+          pdfFileName.style.display = 'none';
+          pdfPreviewContent.style.display = 'none';
+          resetPdfBtn.style.display = 'none';
+          processPdfBtn.style.display = 'none';
+          pdfFileInput.value = '';
+          pdfTextArea.value = '';
+        });
+      }
+      
+      if(pdfChooseFileBtn){
+        pdfChooseFileBtn.addEventListener('click', function(){ pdfFileInput.click(); });
+      }
+      
+      if(pdfFileInput){
+        pdfFileInput.addEventListener('change', function(e){
+          const file = e.target.files[0];
+          if(!file) return;
+          
+          pdfFileText.textContent = file.name;
+          pdfFileName.style.display = 'block';
+          
+          const reader = new FileReader();
+          reader.onload = function(event){
+            try {
+              pdfjsLib.getDocument(event.target.result).promise.then(pdf => {
+                let textContent = '';
+                const numPages = pdf.numPages;
+                let pagesProcessed = 0;
+                
+                for(let page = 1; page <= numPages; page++){
+                  pdf.getPage(page).then(pageObj => {
+                    pageObj.getTextContent().then(textObj => {
+                      textContent += textObj.items.map(item => item.str).join(' ') + '\n';
+                      pagesProcessed++;
+                      
+                      if(pagesProcessed === numPages){
+                        pdfTextArea.value = textContent;
+                        pdfPreviewContent.style.display = 'block';
+                        resetPdfBtn.style.display = 'block';
+                        processPdfBtn.style.display = 'block';
+                      }
+                    });
+                  });
+                }
+              }).catch(err => {
+                alert('Error parsing PDF: ' + err.message);
+                pdfFileInput.value = '';
+                pdfFileName.style.display = 'none';
+              });
+            } catch(err){
+              alert('Error: ' + err.message);
+              pdfFileInput.value = '';
+              pdfFileName.style.display = 'none';
+            }
+          };
+          reader.readAsArrayBuffer(file);
+        });
+      }
+      
+      if(processPdfBtn){
+        processPdfBtn.addEventListener('click', function(){
+          const text = pdfTextArea.value.trim();
+          if(!text){
+            alert('Tidak ada teks untuk diproses');
+            return;
+          }
+          
+          // Simple PDF text parsing - extract nama, volume, satuan
+          const lines = text.split('\n').filter(l => l.trim());
+          let itemsFound = [];
+          
+          // Try to parse structured data
+          lines.forEach(line => {
+            const parts = line.trim().split(/[\s\t,;]+/);
+            if(parts.length >= 2){
+              const name = parts[0];
+              if(name && name.length > 2){
+                itemsFound.push({
+                  name: name,
+                  volume: parts[1] || '',
+                  unit: parts[2] || '',
+                  text: line
+                });
+              }
+            }
+          });
+          
+          if(itemsFound.length === 0){
+            alert('Tidak dapat mengekstrak data item dari PDF. Pastikan format: Nama Volume Satuan');
+            return;
+          }
+          
+          // Add items to area
+          let addedCount = 0;
+          itemsFound.slice(0, 20).forEach(itemData => {
+            const itemName = itemData.name.trim();
+            if(!itemName) return;
+            
+            const exists = areaObj.items.some(it => it.name.toLowerCase() === itemName.toLowerCase());
+            if(exists) return;
+            
+            const newItem = {
+              name: itemName,
+              unit: itemData.unit.trim(),
+              volume: itemData.volume.trim(),
+              supplier: '',
+              tanggal_pengiriman: '',
+              client: '',
+              terkirim: '',
+              realisasi: '',
+              status: statusStages[0],
+              note: ''
+            };
+            
+            areaObj.items.push(newItem);
+            addedCount++;
+          });
+          
+          if(addedCount === 0){
+            alert('Tidak ada item baru yang dapat ditambahkan');
+            return;
+          }
+          
+          map[projectName] = areaList;
+          localStorage.setItem('kans_project_areas', JSON.stringify(map));
+          
+          renderItemsAndUpdateFilter();
+          infoEl.innerHTML = `<p><strong>Jumlah item:</strong> ${areaObj.items.length}</p>`;
+          
+          closeModal(pdfModal);
+          alert(`✓ ${addedCount} item berhasil diimpor dari PDF`);
         });
       }
     })();
