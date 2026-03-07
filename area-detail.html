@@ -1179,51 +1179,93 @@
       // Confirm import
       if(confirmBtn){
         confirmBtn.addEventListener('click', function(){
-          const mapName = document.getElementById('map-name').value;
-          const mapVolume = document.getElementById('map-volume').value;
-          const mapUnit = document.getElementById('map-unit').value;
-          
-          let addedCount = 0;
-          excelData.forEach(row => {
-            const itemName = (row[mapName] || '').trim();
-            if(!itemName) return; // Skip empty names
+          try {
+            console.log('Import button clicked');
+            console.log('areaObj:', areaObj);
+            console.log('excelData length:', excelData.length);
             
-            // Check if item already exists
-            const exists = areaObj.items.some(it => it.name.toLowerCase() === itemName.toLowerCase());
-            if(exists) return; // Skip duplicates
+            if(!areaObj){
+              alert('Error: Area data tidak ditemukan. Coba reload halaman.');
+              return;
+            }
             
-            const newItem = {
-              name: itemName,
-              unit: (row[mapUnit] || '').trim(),
-              volume: (row[mapVolume] || '').trim(),
-              supplier: '',
-              tanggal_pengiriman: '',
-              client: '',
-              terkirim: '',
-              realisasi: '',
-              status: statusStages[0],
-              note: ''
-            };
+            const mapName = document.getElementById('map-name').value;
+            const mapVolume = document.getElementById('map-volume').value;
+            const mapUnit = document.getElementById('map-unit').value;
             
-            areaObj.items.push(newItem);
-            addedCount++;
-          });
-          
-          if(addedCount === 0){
-            alert('Tidak ada item baru yang dapat ditambahkan (kemungkinan semua duplikat atau kosong)');
-            return;
+            if(!mapName){
+              alert('Error: Kolom "Nama Barang" belum dipilih');
+              return;
+            }
+            
+            console.log('Mapping:', {mapName, mapVolume, mapUnit});
+            console.log('Excel data sample:', excelData.slice(0,2));
+            
+            let addedCount = 0;
+            let skippedCount = 0;
+            
+            excelData.forEach((row, idx) => {
+              const itemName = (row[mapName] || '').trim();
+              
+              if(!itemName){
+                console.log(`Row ${idx}: skipped - empty name`);
+                skippedCount++;
+                return;
+              }
+              
+              // Check if item already exists
+              const exists = areaObj.items.some(it => it.name.toLowerCase() === itemName.toLowerCase());
+              if(exists){
+                console.log(`Row ${idx}: skipped - duplicate: ${itemName}`);
+                skippedCount++;
+                return;
+              }
+              
+              const newItem = {
+                name: itemName,
+                unit: (row[mapUnit] || '').trim(),
+                volume: (row[mapVolume] || '').trim(),
+                supplier: '',
+                tanggal_pengiriman: '',
+                client: '',
+                terkirim: '',
+                realisasi: '',
+                status: statusStages[0],
+                note: ''
+              };
+              
+              console.log(`Row ${idx}: added - ${itemName}`);
+              areaObj.items.push(newItem);
+              addedCount++;
+            });
+            
+            console.log(`Import result: added=${addedCount}, skipped=${skippedCount}`);
+            
+            if(addedCount === 0){
+              alert(`Tidak ada item baru yang dapat ditambahkan.\n\n(${skippedCount} item sudah ada atau kosong)`);
+              return;
+            }
+            
+            // Save to localStorage
+            if(!map){
+              alert('Error: map variable tidak ditemukan');
+              return;
+            }
+            
+            map[projectName] = areaList;
+            localStorage.setItem('kans_project_areas', JSON.stringify(map));
+            
+            // Update UI
+            renderItemsAndUpdateFilter();
+            infoEl.innerHTML = `<p><strong>Jumlah item:</strong> ${areaObj.items.length}</p>`;
+            
+            closeModal(importModal);
+            alert(`✓ ${addedCount} item berhasil diimpor dari Excel`);
+            
+          } catch(err){
+            console.error('Error during import:', err);
+            alert('Error saat mengimpor: ' + err.message + '\n\nLihat console (F12) untuk detail.');
           }
-          
-          // Save to localStorage
-          map[projectName] = areaList;
-          localStorage.setItem('kans_project_areas', JSON.stringify(map));
-          
-          // Update UI
-          renderItemsAndUpdateFilter();
-          infoEl.innerHTML = `<p><strong>Jumlah item:</strong> ${areaObj.items.length}</p>`;
-          
-          closeModal(importModal);
-          alert(`✓ ${addedCount} item berhasil diimpor dari Excel`);
         });
       }
     })();
