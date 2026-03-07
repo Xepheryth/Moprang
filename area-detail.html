@@ -265,9 +265,9 @@
     </main>
   </div>
 
-  <script src="script.js?v=20260225-16"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="script.js?v=20260225-16"></script>
   <script>
     // admin check: only these usernames may add/edit/delete (fallback)
     function isAdminUser(){ try{ const cur = localStorage.getItem('kans_current'); return cur === 'admin' || cur === 'admin2'; }catch(e){ return false; } }
