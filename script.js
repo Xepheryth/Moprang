@@ -785,10 +785,12 @@ if(profileRefreshBtn) profileRefreshBtn.addEventListener('click', loadProfile);
 renderUserState();
 window.clearCurrentUser = clearCurrentUser;
 
-// Render awal
+// Render awal (hanya jika di halaman dengan elemen 'home')
 renderProjectCards();
-updateHomeStats();
-showPage('home'); // Tampilkan halaman beranda
+if(document.getElementById('home')) {
+    updateHomeStats();
+    showPage('home'); // Tampilkan halaman beranda
+}
 
 // Delay ini memastikan semua element sudah siap
 setTimeout(function handleQueryOnLoad(){
