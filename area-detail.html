@@ -1181,17 +1181,6 @@
           setTimeout(() => showPreview(), 100);
         }
       }
-        // Auto-show preview if all required fields are selected
-        const mapName = document.getElementById('map-name').value;
-        if(mapName){
-          // Automatically proceed to preview
-          document.getElementById('import-step-2').style.display = 'none';
-          document.getElementById('import-step-3').style.display = 'block';
-          document.getElementById('import-next-btn').style.display = 'none';
-          document.getElementById('import-confirm-btn').style.display = 'block';
-          showPreview();
-        }
-      }
       
       // Next button - show preview
       if(nextBtn){
