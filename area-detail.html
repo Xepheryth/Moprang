@@ -195,6 +195,11 @@
           
           <!-- Step 3: Column Mapping (after parsing) -->
           <div id="pdf-step-3" style="display:none; margin-top:20px;">
+            <div id="pdf-detection-summary" style="padding:12px; background:#e8f5e9; border:1px solid #4caf50; border-radius:4px; margin-bottom:16px; font-size:12px;">
+              <p style="margin:0 0 8px 0; color:#2e7d32; font-weight:bold;">✓ Deteksi Otomatis:</p>
+              <p id="pdf-detection-text" style="margin:0; color:#333; font-family:monospace;"></p>
+            </div>
+            
             <p style="margin:0 0 12px 0; font-size:13px; color:#666;"><strong>Pilih kolom PDF yang sesuai dengan field item:</strong></p>
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
               <div style="display:flex; flex-direction:column;">
@@ -1779,7 +1784,7 @@
             return;
           }
           
-          // Populate dropdowns
+          // Populate dropdowns and show detection summary
           const maps = ['pdf-map-name', 'pdf-map-volume', 'pdf-map-unit'];
           maps.forEach(mapId => {
             const select = document.getElementById(mapId);
@@ -1793,6 +1798,16 @@
               });
             }
           });
+          
+          // Show detection summary
+          const summaryEl = document.getElementById('pdf-detection-text');
+          if(summaryEl){
+            summaryEl.innerHTML = `
+              <strong>Baris data:</strong> ${pdfData.length} item<br>
+              <strong>Kolom terdeteksi:</strong> ${pdfColumns.join(', ')}<br>
+              <strong>Sampel data:</strong> ${pdfData.slice(0, 2).map(r => '[' + pdfColumns.map(c => r[c] || '-').join(' | ') + ']').join(' ... ')}
+            `;
+          }
           
           // Try auto-detect
           tryAutoMapPdfColumns();
@@ -1809,35 +1824,125 @@
         console.log('=== PDF Auto-detect starting ===');
         console.log('Available PDF columns:', pdfColumns);
         
-        const mappings = {
-          'pdf-map-name': ['nama barang', 'nama item', 'nama', 'barang', 'item', 'name', 'product', 'col1', 'column1'],
-          'pdf-map-volume': ['volume', 'jumlah', 'qty', 'quantity', 'vol', 'jml', 'col2', 'column2'],
-          'pdf-map-unit': ['satuan', 'unit', 'uom', 'pcs', 'col3', 'column3']
+        // Map target fields to select IDs
+        const targets = {
+          'pdf-map-name': {
+            exact: ['nama barang', 'nama item', 'nama'],
+            partial: ['barang', 'item', 'produk', 'name', 'product']
+          },
+          'pdf-map-volume': {
+            exact: ['volume', 'jumlah', 'qty'],
+            partial: ['vol', 'jml', 'quantity', 'amount']
+          },
+          'pdf-map-unit': {
+            exact: ['satuan', 'unit'],
+            partial: ['uom', 'kemasan', 'ukuran']
+          }
         };
         
-        for(let selectId in mappings){
+        let allMapped = true;
+        const mappedCols = new Set();
+        
+        console.log('\n=== STEP 1: Exact header match ===');
+        
+        // Try exact header match first
+        for(let selectId in targets){
           const select = document.getElementById(selectId);
           if(!select) continue;
           
-          const patterns = mappings[selectId];
-          let foundMatch = false;
+          const exactNames = targets[selectId].exact;
+          let found = false;
           
           for(let col of pdfColumns){
+            if(mappedCols.has(col)) continue;
+            
             const colLower = col.toLowerCase().trim();
-            for(let pattern of patterns){
-              if(colLower === pattern || colLower.includes(pattern) || pattern.includes(colLower)){
+            for(let exact of exactNames){
+              if(colLower === exact.toLowerCase()){
                 select.value = col;
-                foundMatch = true;
-                console.log(`✓ ${selectId}: matched "${col}"`);
+                mappedCols.add(col);
+                console.log(`✓ ${selectId}: EXACT HEADER "${col}"`);
+                found = true;
                 break;
               }
             }
-            if(foundMatch) break;
+            if(found) break;
+          }
+        }
+        
+        console.log('\n=== STEP 2: Partial match + content analysis ===');
+        
+        // For unmapped fields, try partial match + content analysis
+        for(let selectId in targets){
+          const select = document.getElementById(selectId);
+          if(!select || mappedCols.has(select.value)) continue; // Skip if already mapped
+          
+          const partialPatterns = targets[selectId].partial;
+          let bestCol = '';
+          let bestScore = 0;
+          
+          for(let col of pdfColumns){
+            if(mappedCols.has(col)) continue;
+            
+            const colLower = col.toLowerCase().trim();
+            let score = 0;
+            
+            // Check partial matches
+            for(let pattern of partialPatterns){
+              if(colLower.includes(pattern.toLowerCase())) score += 5;
+            }
+            
+            // Analyze content
+            const sampleValues = pdfData.slice(0, 5)
+              .map(r => String(r[col] || '').trim())
+              .filter(v => v);
+            
+            if(sampleValues.length > 0){
+              if(selectId === 'pdf-map-name'){
+                sampleValues.forEach(val => {
+                  if(/[a-z]/i.test(val) && val.length > 2) score += 2;
+                });
+              }
+              
+              if(selectId === 'pdf-map-volume'){
+                sampleValues.forEach(val => {
+                  if(/^\d+(\.\d+)?$/.test(val)) score += 3;
+                });
+              }
+              
+              if(selectId === 'pdf-map-unit'){
+                const unitValues = ['pcs', 'box', 'set', 'unit', 'kg', 'gram', 'liter', 'meter', 'roll', 'piece', 'pc', 'bks', 'dus', 'ikat', 'm', 'cm'];
+                sampleValues.forEach(val => {
+                  const valLower = val.toLowerCase();
+                  if(unitValues.includes(valLower)) score += 5;
+                  if(val.length <= 10 && /^[a-z0-9]+$/i.test(val)) score += 1;
+                });
+              }
+            }
+            
+            if(score > bestScore){
+              bestScore = score;
+              bestCol = col;
+            }
           }
           
-          if(!foundMatch){
-            console.warn(`⚠ ${selectId}: no match`);
+          if(bestCol && bestScore > 0){
+            select.value = bestCol;
+            mappedCols.add(bestCol);
+            console.log(`✓ ${selectId}: PARTIAL MATCH "${bestCol}" (score: ${bestScore})`);
+          } else {
+            console.warn(`⚠ ${selectId}: no match found`);
+            allMapped = false;
           }
+        }
+        
+        console.log('\n=== Auto-detect COMPLETE ===');
+        console.log('All fields mapped:', allMapped);
+        
+        // Auto-show preview if all 3 fields mapped
+        if(allMapped){
+          console.log('✓ Auto-showing preview...');
+          setTimeout(() => showPdfPreview(), 150);
         }
       }
       
@@ -1855,39 +1960,26 @@
         const previewTable = document.getElementById('pdf-import-preview-table');
         previewTable.innerHTML = '';
         
-        // Create table
-        const table = document.createElement('table');
-        table.style.width = '100%';
-        table.style.borderCollapse = 'collapse';
+        // Create table with same styling as Excel preview
+        let html = '<table style="width:100%; border-collapse:collapse;">';
+        html += '<thead><tr style="background:#f0f0f0; border-bottom:2px solid #ddd;">';
+        html += '<th style="padding:8px; text-align:left; border:1px solid #ddd; font-weight:bold;">Nama Barang</th>';
+        html += '<th style="padding:8px; text-align:center; border:1px solid #ddd; font-weight:bold;">Volume</th>';
+        html += '<th style="padding:8px; text-align:center; border:1px solid #ddd; font-weight:bold;">Satuan</th>';
+        html += '</tr></thead><tbody>';
         
-        // Header
-        const headerRow = table.insertRow();
-        headerRow.style.background = '#f5f5f5';
-        [mapName, mapVolume, mapUnit].forEach(col => {
-          const th = document.createElement('th');
-          th.textContent = col;
-          th.style.padding = '8px';
-          th.style.textAlign = 'left';
-          th.style.borderBottom = '2px solid #ddd';
-          th.style.fontSize = '12px';
-          th.style.fontWeight = 'bold';
-          headerRow.appendChild(th);
+        const preview = pdfData.slice(0, 5);
+        preview.forEach(row => {
+          html += '<tr style="border-bottom:1px solid #ddd;">';
+          html += `<td style="padding:8px; border:1px solid #ddd; font-size:12px;">${row[mapName] || '-'}</td>`;
+          html += `<td style="padding:8px; border:1px solid #ddd; text-align:center; font-size:12px;">${row[mapVolume] || '-'}</td>`;
+          html += `<td style="padding:8px; border:1px solid #ddd; text-align:center; font-size:12px;">${row[mapUnit] || '-'}</td>`;
+          html += '</tr>';
         });
         
-        // Sample rows (first 5)
-        pdfData.slice(0, 5).forEach(row => {
-          const tr = table.insertRow();
-          tr.style.borderBottom = '1px solid #eee';
-          [mapName, mapVolume, mapUnit].forEach(col => {
-            const td = document.createElement('td');
-            td.textContent = row[col] || '';
-            td.style.padding = '8px';
-            td.style.fontSize = '11px';
-            tr.appendChild(td);
-          });
-        });
-        
-        previewTable.appendChild(table);
+        html += `<tr style="background:#f9f9f9; border-top:2px solid #ddd;"><td colspan="3" style="padding:8px; font-size:11px; color:#666; text-align:center;"><strong>${pdfData.length}</strong> baris data akan diimpor</td></tr>`;
+        html += '</tbody></table>';
+        previewTable.innerHTML = html;
         
         // Show step 4 (preview)
         document.getElementById('pdf-step-3').style.display = 'none';
