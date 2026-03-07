@@ -1089,14 +1089,18 @@
               }
               
               // Use detected header row to parse data
-              // Build range dari header row sampai end row untuk precise data extraction
-              const headerRowNum = detectionResult.headerRowIndex + 1; // Convert to 1-based
+              // Build range dari BARIS SETELAH header sampai end row
+              const headerRowNum = detectionResult.headerRowIndex + 1; // Convert to 1-based (header row)
+              const dataStartRowNum = detectionResult.headerRowIndex + 2; // Row AFTER header (1-based)
               const startCol = XLSX.utils.encode_col(range.s.c);
               const endCol = XLSX.utils.encode_col(range.e.c);
               const endRow = range.e.r + 1; // Convert to 1-based
-              const dataRange = `${startCol}${headerRowNum}:${endCol}${endRow}`;
               
-              console.log(`Parsing range: ${dataRange}`);
+              // Only parse data rows (skip header row)
+              const dataRange = `${startCol}${dataStartRowNum}:${endCol}${endRow}`;
+              
+              console.log(`Header row: ${headerRowNum} (${detectionResult.headerRow.join(' | ')})`);
+              console.log(`Data range: ${dataRange}`);
               
               const jsonData = XLSX.utils.sheet_to_json(firstSheet, {
                 defval: '', 
@@ -1107,24 +1111,14 @@
               
               console.log(`Raw parsed rows: ${jsonData.length}`);
               
-              // Filter out empty rows (baris pertama bisa jadi header row yang duplicate)
+              // Filter out empty rows only (header row sudah dikecualikan dengan range)
               excelData = jsonData.filter((row, idx) => {
                 // Skip if row is completely empty
                 const hasValue = Object.values(row).some(val => val && String(val).trim());
-                
-                // Skip jika row ini identik dengan header (avoid duplicate headers)
-                if(idx === 0){
-                  const isHeaderRow = detectionResult.headerRow.every((header, colIdx) => {
-                    const key = Object.keys(row)[colIdx];
-                    return key === header;
-                  });
-                  if(isHeaderRow) return false;
-                }
-                
                 return hasValue;
               });
               
-              console.log(`Filtered rows (after removing empty & header dups): ${excelData.length}`);
+              console.log(`Filtered rows (after removing empty): ${excelData.length}`);
               
               if(excelData.length === 0){
                 alert('File Excel kosong atau tidak ada data yang valid setelah header');
@@ -1137,13 +1131,14 @@
               excelExactMatches = detectionResult.exactMatches || {};
               
               console.log('Processed:', {
+                headerRowIndex: detectionResult.headerRowIndex,
+                headerRowNum: headerRowNum,
+                dataStartRowNum: dataStartRowNum,
                 totalDataRows: excelData.length,
                 columns: excelColumns,
-                headerRowIndex: detectionResult.headerRowIndex,
-                headerRow: detectionResult.headerRow,
                 dataRange: dataRange,
                 sampleFirstRow: excelData[0],
-                exactMatches: excelExactMatches
+                exactMatches: Object.keys(excelExactMatches).length > 0 ? excelExactMatches : 'none'
               });
               
               // Show step 2
@@ -1721,7 +1716,7 @@
           
           // Parse lines: assume each line is "field1 field2 field3" or "field1|field2|field3"
           const lines = text.split('\n').filter(l => l.trim());
-          pdfData = [];
+          let allParsedRows = [];
           pdfColumns = [];
           
           lines.forEach((line, idx) => {
@@ -1746,11 +1741,32 @@
                 row[colName] = val;
                 if(!pdfColumns.includes(colName)) pdfColumns.push(colName);
               });
-              pdfData.push(row);
+              allParsedRows.push(row);
             }
           });
           
-          console.log('Parsed data:', {rows: pdfData.length, columns: pdfColumns});
+          // Filter out header rows (skip rows yang cocok dengan header patterns)
+          const headerPatterns = ['nama barang', 'nama item', 'volume', 'satuan', 'unit', 'qty', 'jumlah'];
+          pdfData = allParsedRows.filter((row, idx) => {
+            // Check if row values looks like header (all values match header patterns)
+            const values = Object.values(row).map(v => String(v || '').toLowerCase().trim());
+            const matchesHeaderPattern = values.every(val => {
+              return val.length === 0 || headerPatterns.some(pattern => val === pattern || val.includes(pattern));
+            });
+            
+            // Only skip if it looks like a header (first row atau values semua match pattern)
+            if(matchesHeaderPattern && (idx === 0 || values.join('|').includes('nama barang'))){
+              console.log(`Skipped potential header row: ${Object.values(row).join(' | ')}`);
+              return false;
+            }
+            return true;
+          });
+          
+          console.log('Parsed data:', {
+            rawRows: allParsedRows.length,
+            filteredRows: pdfData.length,
+            columns: pdfColumns
+          });
           
           if(pdfData.length === 0){
             alert('Tidak dapat mengekstrak data. Pastikan format benar: Nama | Volume | Satuan');
