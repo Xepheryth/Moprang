@@ -265,7 +265,7 @@
     </main>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="script.js?v=20260225-16"></script>
   <script>
@@ -1017,6 +1017,14 @@
           const reader = new FileReader();
           reader.onload = function(event){
             try {
+              // Check if XLSX library is loaded
+              if(typeof XLSX === 'undefined'){
+                alert('Library Excel belum siap dimuat. Coba refresh halaman dan coba lagi.');
+                fileInput.value = '';
+                fileNameDisplay.style.display = 'none';
+                return;
+              }
+              
               const workbook = XLSX.read(event.target.result, {type: 'array'});
               const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
               const jsonData = XLSX.utils.sheet_to_json(firstSheet, {defval: '', blankrows: false});
