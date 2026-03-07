@@ -1205,7 +1205,8 @@
             let skippedCount = 0;
             
             excelData.forEach((row, idx) => {
-              const itemName = (row[mapName] || '').trim();
+              // Convert to string dan trim (handle numbers dari Excel)
+              const itemName = (row[mapName] ? String(row[mapName]) : '').trim();
               
               if(!itemName){
                 console.log(`Row ${idx}: skipped - empty name`);
@@ -1223,8 +1224,8 @@
               
               const newItem = {
                 name: itemName,
-                unit: (row[mapUnit] || '').trim(),
-                volume: (row[mapVolume] || '').trim(),
+                unit: (row[mapUnit] ? String(row[mapUnit]) : '').trim(),
+                volume: (row[mapVolume] ? String(row[mapVolume]) : '').trim(),
                 supplier: '',
                 tanggal_pengiriman: '',
                 client: '',

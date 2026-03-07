@@ -21,6 +21,8 @@ function getProjectsWithShipments() {
 // Fungsi untuk render project cards
 function renderProjectCards() {
     const container = document.getElementById('projects-container');
+    if (!container) return; // Exit silently if container doesn't exist (e.g., on area-detail page)
+    
     container.innerHTML = '';
     
     const projects = getProjectsWithShipments();
