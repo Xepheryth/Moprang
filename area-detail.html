@@ -1026,9 +1026,6 @@
         const mapName = document.getElementById('map-name').value;
         const mapVolume = document.getElementById('map-volume').value;
         const mapUnit = document.getElementById('map-unit').value;
-        const mapSupplier = document.getElementById('map-supplier').value;
-        const mapDate = document.getElementById('map-date').value;
-        const mapClient = document.getElementById('map-client').value;
         
         let html = '<table style="width:100%; border-collapse:collapse;">';
         html += '<thead><tr style="background:#f0f0f0; border-bottom:2px solid #ddd;">';
@@ -1046,7 +1043,10 @@
           html += '</tr>';
         });
         
-        html += `<tr style="background:#f9f9f9; border-top:2px solid #ddd;"><td colspan="3
+        html += `<tr style="background:#f9f9f9; border-top:2px solid #ddd;"><td colspan="3" style="padding:8px; font-size:11px; color:#666; text-align:center;"><strong>${excelData.length}</strong> baris data akan diimpor</td></tr>`;
+        html += '</tbody></table>';
+        previewTable.innerHTML = html;
+      }
       
       // Confirm import
       if(confirmBtn){
@@ -1054,18 +1054,6 @@
           const mapName = document.getElementById('map-name').value;
           const mapVolume = document.getElementById('map-volume').value;
           const mapUnit = document.getElementById('map-unit').value;
-          const mapSupplier = document.getElementById('map-supplier').value;
-          const mapDate = document.getElementById('map-date').value;
-          const mapClient = document.getElementById('map-client').value;
-          
-          let addedCount = 0;
-          excelData.forEach(row => {
-            const itemName = (row[mapName] || '').trim();
-            if(!itemName) return; // Skip empty names
-            
-            // Check if item already exists
-            const exists = areaObj.items.some(it => it.name.toLowerCase() === itemName.toLowerCase());
-            if(exists) return; // Skip duplicates
           
           let addedCount = 0;
           excelData.forEach(row => {
@@ -1082,7 +1070,19 @@
               volume: (row[mapVolume] || '').trim(),
               supplier: '',
               tanggal_pengiriman: '',
-              client: ''itambahkan (kemungkinan semua duplikat atau kosong)');
+              client: '',
+              terkirim: '',
+              realisasi: '',
+              status: statusStages[0],
+              note: ''
+            };
+            
+            areaObj.items.push(newItem);
+            addedCount++;
+          });
+          
+          if(addedCount === 0){
+            alert('Tidak ada item baru yang dapat ditambahkan (kemungkinan semua duplikat atau kosong)');
             return;
           }
           
