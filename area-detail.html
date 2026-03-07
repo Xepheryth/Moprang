@@ -294,6 +294,7 @@
     
     // Declare areaObj at this scope so it's accessible to all functions
     let areaObj = null;
+    let currentSupplierFilter = '';
 
     const titleEl = document.getElementById('area-title');
     const infoEl = document.getElementById('area-info');
@@ -412,8 +413,7 @@
           return `<span class="status-badge" style="background:${color}; color:#fff; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold;">${status}</span>`;
         }
 
-        // Supplier filter logic
-        let currentSupplierFilter = '';
+        // Supplier filter logic - removed from here since currentSupplierFilter is now global
 
         function renderItemsAndUpdateFilter() {
           updateSupplierFilterOptions();
