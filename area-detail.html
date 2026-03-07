@@ -1006,6 +1006,7 @@
       
       let excelData = [];
       let excelColumns = [];
+      let excelExactMatches = {}; // Store exact matches found during detection
       
       // Show import button only for admin users
       if(isAdminUser() && importBtn){
@@ -1038,6 +1039,7 @@
         confirmBtn.style.display = 'none';
         excelData = [];
         excelColumns = [];
+        excelExactMatches = {};
       }
       
       // Choose file
@@ -1108,12 +1110,14 @@
               }
               
               excelColumns = Object.keys(excelData[0]);
+              excelExactMatches = detectionResult.exactMatches || {};
               
               console.log('Processed:', {
                 totalRows: excelData.length,
                 columns: excelColumns,
                 startRow: detectionResult.dataStartRow,
-                headerRow: detectionResult.headerRow
+                headerRow: detectionResult.headerRow,
+                exactMatches: excelExactMatches
               });
               
               // Show step 2
@@ -1138,56 +1142,109 @@
       function detectExcelStructure(sheet, range){
         console.log('=== Smart Excel Structure Detection ===');
         
-        // Check each row until we find one that looks like headers
-        let headerRowIndex = 0;
-        let headerRow = [];
-        let dataStartRow = 0;
+        // STEP 1: Scan sheet untuk cari exact matches "nama barang", "volume", "satuan"
+        console.log('\n--- STEP 1: Scan untuk EXACT values ---');
         
-        // Scan first 10 rows to find potential header
-        for(let row = range.s.r; row <= Math.min(range.e.r, range.s.r + 10); row++){
-          let rowData = [];
-          let nonEmptyCount = 0;
-          
+        const targetKeywords = {
+          'nama barang': ['nama barang', 'nama item', 'nama'],
+          'volume': ['volume', 'jumlah', 'qty'],
+          'satuan': ['satuan', 'unit', 'uom']
+        };
+        
+        const foundExactCells = {};
+        
+        // Scan seluruh sheet untuk exact matches
+        for(let row = range.s.r; row <= range.e.r; row++){
           for(let col = range.s.c; col <= range.e.c; col++){
             const cellAddress = XLSX.utils.encode_col(col) + (row + 1);
             const cell = sheet[cellAddress];
-            const value = cell ? String(cell.v || '').trim() : '';
-            rowData.push(value);
-            if(value) nonEmptyCount++;
-          }
-          
-          console.log(`Row ${row}: [${rowData.join(' | ')}] (${nonEmptyCount} cols)`);
-          
-          // Found potential header if:
-          // 1. Has at least 2 non-empty cells
-          // 2. Contains keywords like nama, volume, satuan, item, dll
-          const headerKeywords = ['nama', 'volume', 'satuan', 'unit', 'qty', 'barang', 'item', 'jumlah'];
-          const hasHeaderKeyword = rowData.some(cell => {
-            const cellLower = cell.toLowerCase();
-            return headerKeywords.some(kw => cellLower.includes(kw));
-          });
-          
-          if(nonEmptyCount >= 2 && (hasHeaderKeyword || row === range.s.r)){
-            headerRowIndex = row;
-            headerRow = rowData;
-            dataStartRow = row + 1;
-            console.log(`✓ Header detected at row ${row}: [${headerRow.join(' | ')}]`);
-            break;
+            const value = cell ? String(cell.v || '').trim().toLowerCase() : '';
+            
+            if(!value) continue;
+            
+            // Check against target keywords
+            for(let target in targetKeywords){
+              const patterns = targetKeywords[target];
+              for(let pattern of patterns){
+                if(value === pattern){
+                  const colName = XLSX.utils.encode_col(col);
+                  console.log(`✓ Found EXACT "${pattern}" at ${cellAddress} (Col: ${colName})`);
+                  
+                  if(!foundExactCells[target]){
+                    foundExactCells[target] = { col: col, row: row, colName: colName };
+                  }
+                }
+              }
+            }
           }
         }
         
-        if(headerRow.length === 0){
+        console.log('\nExact matches found:', foundExactCells);
+        
+        // STEP 2: Determine header row dari exact matches
+        console.log('\n--- STEP 2: Tentukan header row ---');
+        
+        let headerRowIndex = 0;
+        if(Object.keys(foundExactCells).length > 0){
+          // Gunakan row dari first exact match
+          headerRowIndex = foundExactCells[Object.keys(foundExactCells)[0]].row;
+          console.log(`Header row ditentukan dari exact match: row ${headerRowIndex}`);
+        } else {
+          // Scan first 10 rows seperti sebelumnya
+          for(let row = range.s.r; row <= Math.min(range.e.r, range.s.r + 10); row++){
+            let rowData = [];
+            let nonEmptyCount = 0;
+            
+            for(let col = range.s.c; col <= range.e.c; col++){
+              const cellAddress = XLSX.utils.encode_col(col) + (row + 1);
+              const cell = sheet[cellAddress];
+              const value = cell ? String(cell.v || '').trim() : '';
+              rowData.push(value);
+              if(value) nonEmptyCount++;
+            }
+            
+            console.log(`Row ${row} (${nonEmptyCount} cols): ${rowData.slice(0, 3).join(' | ')}...`);
+            
+            const headerKeywords = ['nama', 'volume', 'satuan', 'unit', 'qty', 'barang', 'item', 'jumlah'];
+            const hasHeaderKeyword = rowData.some(cell => {
+              const cellLower = cell.toLowerCase();
+              return headerKeywords.some(kw => cellLower.includes(kw));
+            });
+            
+            if(nonEmptyCount >= 2 && (hasHeaderKeyword || row === range.s.r)){
+              headerRowIndex = row;
+              console.log(`Header detected at row ${row}`);
+              break;
+            }
+          }
+        }
+        
+        if(headerRowIndex === undefined){
           return {
             success: false,
-            message: 'Tidak dapat mendeteksi header kolom dalam Excel. Pastikan baris pertama/kedua berisi nama kolom.'
+            message: 'Tidak dapat mendeteksi header kolom dalam Excel.'
           };
         }
+        
+        // STEP 3: Extract header row
+        console.log('\n--- STEP 3: Extract header row ---');
+        
+        let headerRow = [];
+        for(let col = range.s.c; col <= range.e.c; col++){
+          const cellAddress = XLSX.utils.encode_col(col) + (headerRowIndex + 1);
+          const cell = sheet[cellAddress];
+          const value = cell ? String(cell.v || '').trim() : '';
+          headerRow.push(value);
+        }
+        
+        console.log('Header row extracted:', headerRow);
         
         return {
           success: true,
           headerRow: headerRow,
           headerRowIndex: headerRowIndex,
-          dataStartRow: dataStartRow
+          dataStartRow: headerRowIndex + 1,
+          exactMatches: foundExactCells
         };
       }
       
@@ -1244,136 +1301,142 @@
       }
       
       function tryAutoMapColumns(){
-        console.log('=== Auto-detect starting (prioritize exact match) ===');
+        console.log('=== Auto-detect starting (exact match priority) ===');
         console.log('Available Excel columns:', excelColumns);
-        console.log('Sample data:', excelData.slice(0, 3));
+        console.log('Exact matches from scan:', excelExactMatches);
         
-        // Define target names dan patterns
-        const targets = {
-          'map-name': {
-            exact: ['nama barang', 'nama item', 'nama'],
-            partial: ['barang', 'item', 'produk', 'name', 'product'],
-            keywords: ['nama', 'barang', 'item']
-          },
-          'map-volume': {
-            exact: ['volume', 'jumlah', 'qty'],
-            partial: ['vol', 'jml', 'quantity', 'amount'],
-            keywords: ['volume', 'qty', 'jumlah']
-          },
-          'map-unit': {
-            exact: ['satuan', 'unit'],
-            partial: ['uom', 'kemasan', 'ukuran'],
-            keywords: ['satuan', 'unit']
-          }
+        // Map exact match keywords to select IDs
+        const keywordToSelectId = {
+          'nama barang': 'map-name',
+          'volume': 'map-volume',
+          'satuan': 'map-unit'
         };
         
         let allMapped = true;
-        const mappedCols = new Set(); // Track which columns already mapped
+        const mappedCols = new Set();
         
-        // Step 1: Try exact name match first
-        console.log('\n=== STEP 1: Exact header match ===');
+        // STEP 1: Use exact matches if found
+        console.log('\n=== STEP 1: Use found exact matches ===');
+        
+        for(let keyword in excelExactMatches){
+          const selectId = keywordToSelectId[keyword];
+          if(!selectId) continue;
+          
+          const match = excelExactMatches[keyword];
+          const colIndex = match.col;
+          const colName = excelColumns[colIndex];
+          
+          if(colName){
+            const select = document.getElementById(selectId);
+            if(select){
+              select.value = colName;
+              mappedCols.add(colName);
+              console.log(`✓ ${selectId}: EXACT MATCH from scan -> "${colName}" (Col ${match.colName})`);
+            }
+          }
+        }
+        
+        // STEP 2: For unmapped fields, try header match
+        console.log('\n=== STEP 2: Header match for unmapped ===');
+        
+        const targets = {
+          'map-name': {
+            exact: ['nama barang', 'nama item', 'nama'],
+            partial: ['barang', 'item', 'produk', 'name', 'product']
+          },
+          'map-volume': {
+            exact: ['volume', 'jumlah', 'qty'],
+            partial: ['vol', 'jml', 'quantity', 'amount']
+          },
+          'map-unit': {
+            exact: ['satuan', 'unit'],
+            partial: ['uom', 'kemasan', 'ukuran']
+          }
+        };
+        
         for(let selectId in targets){
           const select = document.getElementById(selectId);
-          if(!select) continue;
+          if(!select || mappedCols.has(select.value)) continue; // Skip if already mapped
           
           const exactNames = targets[selectId].exact;
+          const partialPatterns = targets[selectId].partial;
           let found = false;
           
+          // Try exact header match
           for(let col of excelColumns){
-            const colLower = col.toLowerCase().trim();
+            if(mappedCols.has(col)) continue;
             
+            const colLower = col.toLowerCase().trim();
             for(let exact of exactNames){
               if(colLower === exact.toLowerCase()){
                 select.value = col;
                 mappedCols.add(col);
-                console.log(`✓ ${selectId}: EXACT MATCH "${col}"`);
+                console.log(`✓ ${selectId}: EXACT HEADER "${col}"`);
                 found = true;
                 break;
               }
             }
-            
             if(found) break;
           }
           
           if(!found){
-            console.log(`⚠ ${selectId}: no exact match, will try partial match`);
-          }
-        }
-        
-        // Step 2: Try partial match for unmapped fields
-        console.log('\n=== STEP 2: Partial header match ===');
-        for(let selectId in targets){
-          const select = document.getElementById(selectId);
-          if(!select || select.value) continue; // Skip if already mapped
-          
-          const partialPatterns = targets[selectId].partial;
-          const keywords = targets[selectId].keywords;
-          
-          // Find best matching column
-          let bestCol = '';
-          let bestScore = 0;
-          
-          for(let col of excelColumns){
-            if(mappedCols.has(col)) continue; // Skip already mapped
+            // Try partial match + content analysis
+            let bestCol = '';
+            let bestScore = 0;
             
-            const colLower = col.toLowerCase().trim();
-            let score = 0;
-            
-            // Check partial matches
-            for(let pattern of partialPatterns){
-              if(colLower.includes(pattern.toLowerCase())){
-                score += 5;
+            for(let col of excelColumns){
+              if(mappedCols.has(col)) continue;
+              
+              const colLower = col.toLowerCase().trim();
+              let score = 0;
+              
+              // Check partial matches
+              for(let pattern of partialPatterns){
+                if(colLower.includes(pattern.toLowerCase())) score += 5;
               }
-            }
-            
-            // Check keywords in header
-            for(let kw of keywords){
-              if(colLower.includes(kw.toLowerCase())){
-                score += 3;
-              }
-            }
-            
-            // Analyze actual data content
-            const sampleValues = excelData.slice(0, 5)
-              .map(r => String(r[col] || '').trim())
-              .filter(v => v);
-            
-            if(sampleValues.length > 0){
-              sampleValues.forEach(val => {
-                const valLower = val.toLowerCase();
-                
+              
+              // Analyze content
+              const sampleValues = excelData.slice(0, 5)
+                .map(r => String(r[col] || '').trim())
+                .filter(v => v);
+              
+              if(sampleValues.length > 0){
                 if(selectId === 'map-name'){
-                  // Name: should have letters, not just numbers
-                  if(/[a-z]/i.test(val) && val.length > 2) score += 2;
+                  sampleValues.forEach(val => {
+                    if(/[a-z]/i.test(val) && val.length > 2) score += 2;
+                  });
                 }
                 
                 if(selectId === 'map-volume'){
-                  // Volume: should be numeric
-                  if(/^\d+(\.\d+)?$/.test(val)) score += 3;
+                  sampleValues.forEach(val => {
+                    if(/^\d+(\.\d+)?$/.test(val)) score += 3;
+                  });
                 }
                 
                 if(selectId === 'map-unit'){
-                  // Unit: check common unit values
                   const unitValues = ['pcs', 'box', 'set', 'unit', 'kg', 'gram', 'liter', 'meter', 'roll', 'piece', 'pc', 'bks', 'dus', 'ikat', 'm', 'cm'];
-                  if(unitValues.includes(valLower)) score += 5;
-                  if(val.length <= 10 && /^[a-z0-9]+$/i.test(val)) score += 1;
+                  sampleValues.forEach(val => {
+                    const valLower = val.toLowerCase();
+                    if(unitValues.includes(valLower)) score += 5;
+                    if(val.length <= 10 && /^[a-z0-9]+$/i.test(val)) score += 1;
+                  });
                 }
-              });
+              }
+              
+              if(score > bestScore){
+                bestScore = score;
+                bestCol = col;
+              }
             }
             
-            if(score > bestScore){
-              bestScore = score;
-              bestCol = col;
+            if(bestCol && bestScore > 0){
+              select.value = bestCol;
+              mappedCols.add(bestCol);
+              console.log(`✓ ${selectId}: PARTIAL MATCH "${bestCol}" (score: ${bestScore})`);
+            } else {
+              console.warn(`⚠ ${selectId}: no match found`);
+              allMapped = false;
             }
-          }
-          
-          if(bestCol && bestScore > 0){
-            select.value = bestCol;
-            mappedCols.add(bestCol);
-            console.log(`✓ ${selectId}: PARTIAL MATCH "${bestCol}" (score: ${bestScore})`);
-          } else {
-            console.warn(`⚠ ${selectId}: no good match. Need manual selection`);
-            allMapped = false;
           }
         }
         
