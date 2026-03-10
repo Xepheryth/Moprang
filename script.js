@@ -820,7 +820,15 @@ function renderDeliverySchedule() {
     schedules.forEach((schedule, index) => {
         const dateObj = new Date(schedule.date + 'T00:00:00');
         const dateStr = dateObj.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-        const statusClass = 'status-' + (schedule.status || 'dijadwalkan').toLowerCase().replace(/\s+/g, '');
+        
+        // Map status to class name - remove 'status-' prefix and normalize spaces
+        let statusClass = '';
+        if (schedule.status === 'Dijadwalkan') statusClass = 'dijadwalkan';
+        else if (schedule.status === 'Dalam Pengiriman') statusClass = 'pengiriman';
+        else if (schedule.status === 'Tiba di Gudang') statusClass = 'tiba';
+        else if (schedule.status === 'Selesai') statusClass = 'selesai';
+        else statusClass = 'dijadwalkan';
+        
         const statusDisplay = schedule.status || 'Dijadwalkan';
         
         html += `<tr>
