@@ -840,10 +840,10 @@ function renderDeliverySchedule() {
             <td><span class="status-badge ${statusClass}">${statusDisplay}</span></td>
             <td style="text-align: center; width: 60px;">
                 ${isAdminUser() ? `<div class="schedule-menu-wrapper">
-                    <button class="schedule-menu-btn" onclick="toggleScheduleMenu(event, ${index})">⋮</button>
-                    <div class="schedule-context-menu" id="menu-${index}" style="display:none;">
-                        <button class="menu-item edit-item" onclick="editDeliverySchedule(${index})">✏️ Edit</button>
-                        <button class="menu-item delete-item" onclick="deleteDeliverySchedule(${index})">🗑️ Hapus</button>
+                    <button class="schedule-menu-btn" data-index="${index}" type="button">⋮</button>
+                    <div class="schedule-context-menu" id="schedule-row-menu-${index}" style="display:none;">
+                        <button type="button" class="menu-item edit-item" data-index="${index}">✏️ Edit</button>
+                        <button type="button" class="menu-item delete-item" data-index="${index}">🗑️ Hapus</button>
                     </div>
                 </div>` : '-'}
             </td>
@@ -851,28 +851,65 @@ function renderDeliverySchedule() {
     });
     
     tbody.innerHTML = html;
+    
+    // Re-attach event listeners after rendering
+    attachScheduleMenuListeners();
 }
 
-// Toggle schedule context menu
-function toggleScheduleMenu(event, index) {
-    event.stopPropagation();
-    const menu = document.getElementById(`menu-${index}`);
-    if (!menu) return;
+// Attach event listeners using event delegation
+function attachScheduleMenuListeners() {
+    const tbody = document.getElementById('schedule-tbody');
+    if (!tbody) return;
     
-    // Close all other menus
-    document.querySelectorAll('.schedule-context-menu').forEach(m => {
-        if (m !== menu) m.style.display = 'none';
+    // Remove old listeners by cloning and replacing (clean approach)
+    const newTbody = tbody.cloneNode(false);
+    newTbody.innerHTML = tbody.innerHTML;
+    tbody.parentNode.replaceChild(newTbody, tbody);
+    
+    // Add listeners to menu buttons
+    newTbody.querySelectorAll('.schedule-menu-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const index = this.getAttribute('data-index');
+            const menu = document.getElementById(`schedule-row-menu-${index}`);
+            if (!menu) return;
+            
+            // Close all other menus
+            document.querySelectorAll('.schedule-context-menu').forEach(m => {
+                if (m !== menu) m.style.display = 'none';
+            });
+            
+            // Toggle this menu
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        });
     });
     
-    // Toggle current menu
-    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    // Add listeners to menu items
+    newTbody.querySelectorAll('.menu-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const index = this.getAttribute('data-index');
+            
+            if (this.classList.contains('edit-item')) {
+                editDeliverySchedule(index);
+            } else if (this.classList.contains('delete-item')) {
+                deleteDeliverySchedule(index);
+            }
+            
+            // Close menu
+            const menu = document.getElementById(`schedule-row-menu-${index}`);
+            if (menu) menu.style.display = 'none';
+        });
+    });
 }
 
 // Show/hide admin controls based on user role
 function updateScheduleAdminControls() {
-    const addBtn = document.getElementById('add-schedule-btn');
-    if (addBtn) {
-        addBtn.style.display = isAdminUser() ? 'block' : 'none';
+    const headerMenu = document.getElementById('schedule-header-menu-wrapper');
+    if (headerMenu) {
+        headerMenu.style.display = isAdminUser() ? 'block' : 'none';
     }
 }
 
@@ -940,7 +977,7 @@ function setupScheduleFormHandler() {
     const form = document.getElementById('schedule-form');
     const modal = document.getElementById('schedule-modal');
     const cancelBtn = document.getElementById('schedule-cancel');
-    const addBtn = document.getElementById('add-schedule-btn');
+    const headerMenuBtn = document.getElementById('schedule-header-menu-btn');
     
     if (!form || !modal) return;
     
@@ -1000,9 +1037,22 @@ function setupScheduleFormHandler() {
         });
     }
     
-    // Add button
-    if (addBtn) {
-        addBtn.addEventListener('click', openAddScheduleModal);
+    // Header menu button
+    if (headerMenuBtn) {
+        headerMenuBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const menu = document.getElementById('schedule-header-menu');
+            if (!menu) return;
+            
+            // Close all row menus
+            document.querySelectorAll('.schedule-context-menu').forEach(m => {
+                if (m !== menu) m.style.display = 'none';
+            });
+            
+            // Toggle header menu
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        });
     }
     
     // Close modal on overlay click
@@ -1012,9 +1062,9 @@ function setupScheduleFormHandler() {
         }
     });
     
-    // Close context menu when clicking outside
+    // Close menus when clicking outside
     document.addEventListener('click', function(e) {
-        if (!e.target.closest('.schedule-menu-wrapper')) {
+        if (!e.target.closest('.schedule-menu-wrapper') && !e.target.closest('#schedule-header-menu-wrapper')) {
             document.querySelectorAll('.schedule-context-menu').forEach(m => m.style.display = 'none');
         }
     });

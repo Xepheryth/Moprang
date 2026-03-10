@@ -101,7 +101,12 @@
           <section class="schedule-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
               <h2 class="section-title" style="margin: 0;">Jadwal Pengiriman</h2>
-              <button id="add-schedule-btn" class="btn-primary" style="display: none; padding: 8px 16px; cursor: pointer;">+ Tambah Jadwal</button>
+              <div class="schedule-header-menu" style="display: none;" id="schedule-header-menu-wrapper">
+                <button class="schedule-menu-btn" id="schedule-header-menu-btn" title="Menu Jadwal">⋮</button>
+                <div class="schedule-context-menu" id="schedule-header-menu" style="display:none;">
+                  <button class="menu-item add-item" onclick="openAddScheduleModal()">➕ Tambah Jadwal</button>
+                </div>
+              </div>
             </div>
             <div id="schedule-container" style="overflow-x: auto;">
               <table id="schedule-table" class="schedule-table">
