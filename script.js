@@ -851,58 +851,6 @@ function renderDeliverySchedule() {
     });
     
     tbody.innerHTML = html;
-    
-    // Re-attach event listeners after rendering
-    attachScheduleMenuListeners();
-}
-
-// Attach event listeners using event delegation
-function attachScheduleMenuListeners() {
-    const tbody = document.getElementById('schedule-tbody');
-    if (!tbody) return;
-    
-    // Remove old listeners by cloning and replacing (clean approach)
-    const newTbody = tbody.cloneNode(false);
-    newTbody.innerHTML = tbody.innerHTML;
-    tbody.parentNode.replaceChild(newTbody, tbody);
-    
-    // Add listeners to menu buttons
-    newTbody.querySelectorAll('.schedule-menu-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const index = this.getAttribute('data-index');
-            const menu = document.getElementById(`schedule-row-menu-${index}`);
-            if (!menu) return;
-            
-            // Close all other menus
-            document.querySelectorAll('.schedule-context-menu').forEach(m => {
-                if (m !== menu) m.style.display = 'none';
-            });
-            
-            // Toggle this menu
-            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-        });
-    });
-    
-    // Add listeners to menu items
-    newTbody.querySelectorAll('.menu-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const index = this.getAttribute('data-index');
-            
-            if (this.classList.contains('edit-item')) {
-                editDeliverySchedule(index);
-            } else if (this.classList.contains('delete-item')) {
-                deleteDeliverySchedule(index);
-            }
-            
-            // Close menu
-            const menu = document.getElementById(`schedule-row-menu-${index}`);
-            if (menu) menu.style.display = 'none';
-        });
-    });
 }
 
 // Show/hide admin controls based on user role
@@ -970,6 +918,85 @@ function deleteDeliverySchedule(index) {
     renderDeliverySchedule();
     // Close any open menus
     document.querySelectorAll('.schedule-context-menu').forEach(m => m.style.display = 'none');
+}
+
+// Setup schedule menu listeners with event delegation
+function setupScheduleMenuListeners() {
+    // Listen for schedule menu button clicks (per-row)
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.schedule-menu-btn');
+        if (btn) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const index = btn.getAttribute('data-index');
+            const menu = document.getElementById(`schedule-row-menu-${index}`);
+            if (!menu) return;
+            
+            // Close all other menus
+            document.querySelectorAll('.schedule-context-menu').forEach(m => {
+                if (m !== menu) m.style.display = 'none';
+            });
+            
+            // Toggle this menu
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+    });
+    
+    // Listen for menu item clicks (Edit, Delete, Add)
+    document.addEventListener('click', function(e) {
+        const item = e.target.closest('.menu-item');
+        if (item) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (item.classList.contains('add-item')) {
+                openAddScheduleModal();
+                // Close header menu
+                const headerMenu = document.getElementById('schedule-header-menu');
+                if (headerMenu) headerMenu.style.display = 'none';
+            } else {
+                const index = item.getAttribute('data-index');
+                
+                if (item.classList.contains('edit-item')) {
+                    editDeliverySchedule(index);
+                } else if (item.classList.contains('delete-item')) {
+                    deleteDeliverySchedule(index);
+                }
+                
+                // Close row menu
+                const menu = document.getElementById(`schedule-row-menu-${index}`);
+                if (menu) menu.style.display = 'none';
+            }
+        }
+    });
+    
+    // Listen for header menu button clicks
+    document.addEventListener('click', function(e) {
+        const headerBtn = e.target.closest('#schedule-header-menu-btn');
+        if (headerBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const menu = document.getElementById('schedule-header-menu');
+            if (!menu) return;
+            
+            // Close all row menus
+            document.querySelectorAll('.schedule-context-menu').forEach(m => {
+                if (m !== menu) m.style.display = 'none';
+            });
+            
+            // Toggle header menu
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+    });
+    
+    // Close menus when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.schedule-menu-wrapper') && !e.target.closest('#schedule-header-menu-wrapper')) {
+            document.querySelectorAll('.schedule-context-menu').forEach(m => m.style.display = 'none');
+        }
+    });
 }
 
 // Setup schedule form handler
@@ -1079,6 +1106,7 @@ if(document.getElementById('schedule-table')) {
     renderDeliverySchedule();
     updateScheduleAdminControls();
     setupScheduleFormHandler();
+    setupScheduleMenuListeners();
 }
 
 // Render awal (hanya jika di halaman dengan elemen 'home')
