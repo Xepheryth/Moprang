@@ -922,35 +922,22 @@ function deleteDeliverySchedule(index) {
 
 // Setup schedule menu listeners with event delegation
 function setupScheduleMenuListeners() {
+    console.log('✅ Schedule menu listeners initialized');
+    
     // Listen for ALL clicks
     document.addEventListener('click', function(e) {
-        // Check for schedule menu button (per-row)
-        const menuBtn = e.target.closest('.schedule-menu-btn');
-        if (menuBtn && menuBtn.id !== 'schedule-header-menu-btn') {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const index = menuBtn.getAttribute('data-index');
-            const menu = document.getElementById(`schedule-row-menu-${index}`);
-            if (!menu) return;
-            
-            // Close all other menus
-            document.querySelectorAll('.schedule-context-menu').forEach(m => {
-                if (m !== menu) m.style.display = 'none';
-            });
-            
-            // Toggle this menu
-            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-            return;
-        }
-        
-        // Check for header menu button click (by ID)
-        if (e.target.id === 'schedule-header-menu-btn') {
+        // Check for header menu button (by closest)
+        const headerMenuBtn = e.target.closest('#schedule-header-menu-btn');
+        if (headerMenuBtn) {
+            console.log('📋 Header menu button clicked');
             e.preventDefault();
             e.stopPropagation();
             
             const menu = document.getElementById('schedule-header-menu');
-            if (!menu) return;
+            if (!menu) {
+                console.warn('⚠️ Header menu not found');
+                return;
+            }
             
             // Close all row menus
             document.querySelectorAll('.schedule-context-menu').forEach(m => {
@@ -959,29 +946,59 @@ function setupScheduleMenuListeners() {
             
             // Toggle header menu
             menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            console.log('🔄 Header menu toggled to:', menu.style.display);
+            return;
+        }
+        
+        // Check for schedule menu button (per-row)
+        const menuBtn = e.target.closest('.schedule-menu-btn');
+        if (menuBtn && !headerMenuBtn) {
+            console.log('📊 Row menu button clicked, index:', menuBtn.getAttribute('data-index'));
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const index = menuBtn.getAttribute('data-index');
+            const menu = document.getElementById(`schedule-row-menu-${index}`);
+            if (!menu) {
+                console.warn('⚠️ Row menu not found for index:', index);
+                return;
+            }
+            
+            // Close all other menus
+            document.querySelectorAll('.schedule-context-menu').forEach(m => {
+                if (m !== menu) m.style.display = 'none';
+            });
+            
+            // Toggle this menu
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            console.log('🔄 Row menu toggled to:', menu.style.display);
             return;
         }
         
         // Check for menu item clicks (Edit, Delete, Add)
         const item = e.target.closest('.menu-item');
         if (item) {
+            console.log('🎯 Menu item clicked:', item.className);
             e.preventDefault();
             e.stopPropagation();
             
             if (item.classList.contains('add-item')) {
+                console.log('➕ Opening add schedule modal');
                 openAddScheduleModal();
                 // Close header menu
                 const headerMenu = document.getElementById('schedule-header-menu');
                 if (headerMenu) headerMenu.style.display = 'none';
-            } else {
+            } else if (item.classList.contains('edit-item')) {
                 const index = item.getAttribute('data-index');
-                
-                if (item.classList.contains('edit-item')) {
-                    editDeliverySchedule(index);
-                } else if (item.classList.contains('delete-item')) {
-                    deleteDeliverySchedule(index);
-                }
-                
+                console.log('✏️ Editing schedule at index:', index);
+                editDeliverySchedule(index);
+                // Close row menu
+                const menu = document.getElementById(`schedule-row-menu-${index}`);
+                if (menu) menu.style.display = 'none';
+            } else if (item.classList.contains('delete-item')) {
+                const index = item.getAttribute('data-index');
+                console.log('🗑️ Deleting schedule at index:', index);
+                deleteDeliverySchedule(index);
                 // Close row menu
                 const menu = document.getElementById(`schedule-row-menu-${index}`);
                 if (menu) menu.style.display = 'none';
@@ -992,7 +1009,11 @@ function setupScheduleMenuListeners() {
         // Close menus when clicking outside
         if (!e.target.closest('.schedule-menu-wrapper') && 
             !e.target.closest('#schedule-header-menu-wrapper')) {
-            document.querySelectorAll('.schedule-context-menu').forEach(m => m.style.display = 'none');
+            const openMenus = document.querySelectorAll('.schedule-context-menu[style*="display: block"]');
+            if (openMenus.length > 0) {
+                console.log('❌ Closing menus due to outside click');
+                document.querySelectorAll('.schedule-context-menu').forEach(m => m.style.display = 'none');
+            }
         }
     });
 }
