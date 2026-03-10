@@ -99,8 +99,8 @@
 
           <!-- Delivery Schedule Section -->
           <section class="schedule-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-              <h2 class="section-title">Jadwal Pengiriman</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+              <h2 class="section-title" style="margin: 0;">Jadwal Pengiriman</h2>
               <button id="add-schedule-btn" class="btn-primary" style="display: none; padding: 8px 16px; cursor: pointer;">+ Tambah Jadwal</button>
             </div>
             <div id="schedule-container" style="overflow-x: auto;">
@@ -113,7 +113,7 @@
                     <th>DESKRIPSI BARANG</th>
                     <th>KUANTITAS</th>
                     <th>STATUS</th>
-                    <th style="width: 120px;">AKSI</th>
+                    <th style="width: 60px; text-align: center;">⋮</th>
                   </tr>
                 </thead>
                 <tbody id="schedule-tbody">

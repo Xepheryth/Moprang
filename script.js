@@ -821,7 +821,7 @@ function renderDeliverySchedule() {
         const dateObj = new Date(schedule.date + 'T00:00:00');
         const dateStr = dateObj.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
         
-        // Map status to class name - remove 'status-' prefix and normalize spaces
+        // Map status to class name
         let statusClass = '';
         if (schedule.status === 'Dijadwalkan') statusClass = 'dijadwalkan';
         else if (schedule.status === 'Dalam Pengiriman') statusClass = 'pengiriman';
@@ -838,16 +838,34 @@ function renderDeliverySchedule() {
             <td>${schedule.description || '-'}</td>
             <td>${schedule.quantity || '-'}</td>
             <td><span class="status-badge ${statusClass}">${statusDisplay}</span></td>
-            <td style="width: 120px;">
-                <div class="action-buttons">
-                    ${isAdminUser() ? `<button class="btn-edit" onclick="editDeliverySchedule(${index})">✏️ Edit</button>` : ''}
-                    ${isAdminUser() ? `<button class="btn-delete" onclick="deleteDeliverySchedule(${index})">🗑️ Hapus</button>` : ''}
-                </div>
+            <td style="text-align: center; width: 60px;">
+                ${isAdminUser() ? `<div class="schedule-menu-wrapper">
+                    <button class="schedule-menu-btn" onclick="toggleScheduleMenu(event, ${index})">⋮</button>
+                    <div class="schedule-context-menu" id="menu-${index}" style="display:none;">
+                        <button class="menu-item edit-item" onclick="editDeliverySchedule(${index})">✏️ Edit</button>
+                        <button class="menu-item delete-item" onclick="deleteDeliverySchedule(${index})">🗑️ Hapus</button>
+                    </div>
+                </div>` : '-'}
             </td>
         </tr>`;
     });
     
     tbody.innerHTML = html;
+}
+
+// Toggle schedule context menu
+function toggleScheduleMenu(event, index) {
+    event.stopPropagation();
+    const menu = document.getElementById(`menu-${index}`);
+    if (!menu) return;
+    
+    // Close all other menus
+    document.querySelectorAll('.schedule-context-menu').forEach(m => {
+        if (m !== menu) m.style.display = 'none';
+    });
+    
+    // Toggle current menu
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
 }
 
 // Show/hide admin controls based on user role
@@ -894,6 +912,8 @@ function editDeliverySchedule(index) {
     
     form.dataset.editIndex = index;
     modal.style.display = 'flex';
+    // Close any open menus
+    document.querySelectorAll('.schedule-context-menu').forEach(m => m.style.display = 'none');
 }
 
 // Delete delivery schedule
@@ -911,6 +931,8 @@ function deleteDeliverySchedule(index) {
     schedules.splice(index, 1);
     saveDeliverySchedules(schedules);
     renderDeliverySchedule();
+    // Close any open menus
+    document.querySelectorAll('.schedule-context-menu').forEach(m => m.style.display = 'none');
 }
 
 // Setup schedule form handler
@@ -967,6 +989,8 @@ function setupScheduleFormHandler() {
         saveDeliverySchedules(schedules);
         renderDeliverySchedule();
         modal.style.display = 'none';
+        // Close any open menus
+        document.querySelectorAll('.schedule-context-menu').forEach(m => m.style.display = 'none');
     });
     
     // Cancel button
@@ -985,6 +1009,13 @@ function setupScheduleFormHandler() {
     modal.addEventListener('click', function(e) {
         if (e.target === modal) {
             modal.style.display = 'none';
+        }
+    });
+    
+    // Close context menu when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.schedule-menu-wrapper')) {
+            document.querySelectorAll('.schedule-context-menu').forEach(m => m.style.display = 'none');
         }
     });
 }

@@ -1352,6 +1352,76 @@ footer {
   transform: translateY(-1px);
 }
 
+/* Schedule Context Menu */
+.schedule-menu-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.schedule-menu-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  color: #666;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.schedule-menu-btn:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.schedule-context-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  min-width: 120px;
+  margin-top: 4px;
+}
+
+.schedule-context-menu .menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+  color: #333;
+  transition: all 0.2s ease;
+}
+
+.schedule-context-menu .menu-item:first-child {
+  border-radius: 6px 6px 0 0;
+}
+
+.schedule-context-menu .menu-item:last-child {
+  border-radius: 0 0 6px 6px;
+}
+
+.schedule-context-menu .menu-item:hover {
+  background-color: #f5f5f5;
+}
+
+.schedule-context-menu .edit-item:hover {
+  background-color: #fff9c4;
+  color: #f57f17;
+}
+
+.schedule-context-menu .delete-item:hover {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
 /* Info Section */
 .info-section {
   margin-bottom: 60px;
