@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Delivery Schedule</title>
+</head>
+<body>
+    <h1>Test: Tambah Sample Delivery Schedules</h1>
+    <p>Halaman ini untuk testing fitur delivery schedule.</p>
+    <button onclick="addTestData()">Tambah Data Testing</button>
+    <button onclick="clearTestData()">Hapus Data Testing</button>
+    <button onclick="redirectToHome()">Ke Halaman Beranda</button>
+    
+    <pre id="output"></pre>
+    
+    <script>
+        function addTestData() {
+            const testSchedules = [
+                {
+                    "date": "2025-03-15",
+                    "supplier": "PT Supplier Indonesia",
+                    "description": "Batu bara berkualitas tinggi untuk kebutuhan industri",
+                    "quantity": "500 TON",
+                    "status": "Dijadwalkan",
+                    "createdAt": new Date().toISOString()
+                },
+                {
+                    "date": "2025-03-20",
+                    "supplier": "CV Maju Jaya",
+                    "description": "Semen Portland type 1 untuk proyek konstruksi",
+                    "quantity": "100 TAS@50KG",
+                    "status": "Dalam Pengiriman",
+                    "createdAt": new Date().toISOString()
+                },
+                {
+                    "date": "2025-03-10",
+                    "supplier": "PT Global Trading",
+                    "description": "Besi tulangan untuk struktur bangunan",
+                    "quantity": "50 BATANG",
+                    "status": "Selesai",
+                    "createdAt": new Date().toISOString()
+                },
+                {
+                    "date": "2025-03-25",
+                    "supplier": "PT Logistik Cepat",
+                    "description": "Kayu lapis grade A untuk furnitur",
+                    "quantity": "80 LEMBAR",
+                    "status": "Tiba di Gudang",
+                    "createdAt": new Date().toISOString()
+                }
+            ];
+            
+            try {
+                localStorage.setItem('kans_delivery_schedules', JSON.stringify(testSchedules));
+                document.getElementById('output').textContent = '✅ Data testing berhasil ditambahkan:\n\n' + JSON.stringify(testSchedules, null, 2);
+                
+                // Set admin user for testing
+                localStorage.setItem('kans_current', 'admin');
+                console.log('✅ Admin user set for testing');
+                
+            } catch(e) {
+                document.getElementById('output').textContent = '❌ Error: ' + e.message;
+            }
+        }
+        
+        function clearTestData() {
+            try {
+                localStorage.removeItem('kans_delivery_schedules');
+                document.getElementById('output').textContent = '✅ Data testing dihapus';
+            } catch(e) {
+                document.getElementById('output').textContent = '❌ Error: ' + e.message;
+            }
+        }
+        
+        function redirectToHome() {
+            window.location.href = 'Front.html';
+        }
+    </script>
+</body>
+</html>

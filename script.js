@@ -781,9 +781,216 @@ function setupProfilePhotoUpload(){
 const profileRefreshBtn = document.getElementById('profile-refresh-btn');
 if(profileRefreshBtn) profileRefreshBtn.addEventListener('click', loadProfile);
 
+// ============= DELIVERY SCHEDULE MANAGEMENT =============
+
+// Get all delivery schedules from localStorage
+function getDeliverySchedules() {
+    try {
+        return JSON.parse(localStorage.getItem('kans_delivery_schedules') || '[]');
+    } catch(e) {
+        return [];
+    }
+}
+
+// Save delivery schedules to localStorage
+function saveDeliverySchedules(schedules) {
+    try {
+        localStorage.setItem('kans_delivery_schedules', JSON.stringify(schedules));
+    } catch(e) {
+        console.error('Error saving schedules:', e);
+    }
+}
+
+// Render delivery schedule table
+function renderDeliverySchedule() {
+    const tbody = document.getElementById('schedule-tbody');
+    if (!tbody) return;
+    
+    const schedules = getDeliverySchedules();
+    
+    if (schedules.length === 0) {
+        tbody.innerHTML = '<tr style="text-align: center;"><td colspan="7" style="padding: 20px; color: #999;">Tidak ada jadwal pengiriman</td></tr>';
+        return;
+    }
+    
+    // Sort by delivery date (newest first)
+    schedules.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    let html = '';
+    schedules.forEach((schedule, index) => {
+        const dateObj = new Date(schedule.date + 'T00:00:00');
+        const dateStr = dateObj.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+        const statusClass = 'status-' + (schedule.status || 'dijadwalkan').toLowerCase().replace(/\s+/g, '');
+        const statusDisplay = schedule.status || 'Dijadwalkan';
+        
+        html += `<tr>
+            <td style="text-align: center; width: 40px;">${index + 1}</td>
+            <td>${dateStr}</td>
+            <td>${schedule.supplier || '-'}</td>
+            <td>${schedule.description || '-'}</td>
+            <td>${schedule.quantity || '-'}</td>
+            <td><span class="status-badge ${statusClass}">${statusDisplay}</span></td>
+            <td style="width: 120px;">
+                <div class="action-buttons">
+                    ${isAdminUser() ? `<button class="btn-edit" onclick="editDeliverySchedule(${index})">✏️ Edit</button>` : ''}
+                    ${isAdminUser() ? `<button class="btn-delete" onclick="deleteDeliverySchedule(${index})">🗑️ Hapus</button>` : ''}
+                </div>
+            </td>
+        </tr>`;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+// Show/hide admin controls based on user role
+function updateScheduleAdminControls() {
+    const addBtn = document.getElementById('add-schedule-btn');
+    if (addBtn) {
+        addBtn.style.display = isAdminUser() ? 'block' : 'none';
+    }
+}
+
+// Open schedule modal for adding new schedule
+function openAddScheduleModal() {
+    const modal = document.getElementById('schedule-modal');
+    const form = document.getElementById('schedule-form');
+    const title = document.getElementById('schedule-modal-title');
+    
+    if (!modal) return;
+    
+    title.textContent = 'Tambah Jadwal Pengiriman';
+    form.reset();
+    form.dataset.editIndex = '';
+    modal.style.display = 'flex';
+}
+
+// Open schedule modal for editing
+function editDeliverySchedule(index) {
+    const schedules = getDeliverySchedules();
+    const schedule = schedules[index];
+    
+    if (!schedule) return;
+    
+    const modal = document.getElementById('schedule-modal');
+    const form = document.getElementById('schedule-form');
+    const title = document.getElementById('schedule-modal-title');
+    
+    if (!modal) return;
+    
+    title.textContent = 'Edit Jadwal Pengiriman';
+    document.getElementById('schedule-date').value = schedule.date || '';
+    document.getElementById('schedule-supplier').value = schedule.supplier || '';
+    document.getElementById('schedule-description').value = schedule.description || '';
+    document.getElementById('schedule-quantity').value = schedule.quantity || '';
+    document.getElementById('schedule-status').value = schedule.status || '';
+    
+    form.dataset.editIndex = index;
+    modal.style.display = 'flex';
+}
+
+// Delete delivery schedule
+function deleteDeliverySchedule(index) {
+    if (!isAdminUser()) {
+        alert('❌ Hanya admin yang dapat menghapus jadwal');
+        return;
+    }
+    
+    if (!confirm('Yakin ingin menghapus jadwal pengiriman ini?')) {
+        return;
+    }
+    
+    let schedules = getDeliverySchedules();
+    schedules.splice(index, 1);
+    saveDeliverySchedules(schedules);
+    renderDeliverySchedule();
+}
+
+// Setup schedule form handler
+function setupScheduleFormHandler() {
+    const form = document.getElementById('schedule-form');
+    const modal = document.getElementById('schedule-modal');
+    const cancelBtn = document.getElementById('schedule-cancel');
+    const addBtn = document.getElementById('add-schedule-btn');
+    
+    if (!form || !modal) return;
+    
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!isAdminUser()) {
+            alert('❌ Hanya admin yang dapat menambah/mengedit jadwal');
+            return;
+        }
+        
+        const date = document.getElementById('schedule-date').value;
+        const supplier = document.getElementById('schedule-supplier').value;
+        const description = document.getElementById('schedule-description').value;
+        const quantity = document.getElementById('schedule-quantity').value;
+        const status = document.getElementById('schedule-status').value;
+        
+        if (!date || !supplier || !description || !quantity || !status) {
+            alert('❌ Semua field harus diisi');
+            return;
+        }
+        
+        let schedules = getDeliverySchedules();
+        const editIndex = form.dataset.editIndex;
+        
+        const newSchedule = {
+            date: date,
+            supplier: supplier,
+            description: description,
+            quantity: quantity,
+            status: status,
+            createdAt: editIndex !== '' ? schedules[editIndex].createdAt : new Date().toISOString()
+        };
+        
+        if (editIndex !== '') {
+            // Update existing
+            schedules[editIndex] = newSchedule;
+            alert('✅ Jadwal pengiriman berhasil diperbarui');
+        } else {
+            // Add new
+            schedules.push(newSchedule);
+            alert('✅ Jadwal pengiriman berhasil ditambahkan');
+        }
+        
+        saveDeliverySchedules(schedules);
+        renderDeliverySchedule();
+        modal.style.display = 'none';
+    });
+    
+    // Cancel button
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+    }
+    
+    // Add button
+    if (addBtn) {
+        addBtn.addEventListener('click', openAddScheduleModal);
+    }
+    
+    // Close modal on overlay click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+}
+
 // initialize UI state
 renderUserState();
 window.clearCurrentUser = clearCurrentUser;
+
+// Initialize delivery schedule (jika di halaman dengan schedule)
+if(document.getElementById('schedule-table')) {
+    renderDeliverySchedule();
+    updateScheduleAdminControls();
+    setupScheduleFormHandler();
+}
 
 // Render awal (hanya jika di halaman dengan elemen 'home')
 renderProjectCards();

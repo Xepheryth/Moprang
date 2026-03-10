@@ -97,6 +97,73 @@
             </div>
           </section>
 
+          <!-- Delivery Schedule Section -->
+          <section class="schedule-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+              <h2 class="section-title">Jadwal Pengiriman</h2>
+              <button id="add-schedule-btn" class="btn-primary" style="display: none; padding: 8px 16px; cursor: pointer;">+ Tambah Jadwal</button>
+            </div>
+            <div id="schedule-container" style="overflow-x: auto;">
+              <table id="schedule-table" class="schedule-table">
+                <thead>
+                  <tr>
+                    <th>NO</th>
+                    <th>TANGGAL PENGIRIMAN</th>
+                    <th>SUPPLIER</th>
+                    <th>DESKRIPSI BARANG</th>
+                    <th>KUANTITAS</th>
+                    <th>STATUS</th>
+                    <th style="width: 120px;">AKSI</th>
+                  </tr>
+                </thead>
+                <tbody id="schedule-tbody">
+                  <tr style="text-align: center;">
+                    <td colspan="7" style="padding: 20px; color: #999;">Tidak ada jadwal pengiriman</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Modal Tambah/Edit Schedule -->
+          <div id="schedule-modal" class="modal-overlay" aria-hidden="true" style="display:none;">
+            <div class="modal-floating" role="dialog" aria-modal="true" aria-labelledby="schedule-modal-title">
+              <h3 id="schedule-modal-title">Tambah Jadwal Pengiriman</h3>
+              <form id="schedule-form">
+                <div class="form-row">
+                  <label>Tanggal Pengiriman:</label>
+                  <input type="date" id="schedule-date" required style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%;">
+                </div>
+                <div class="form-row">
+                  <label>Supplier:</label>
+                  <input type="text" id="schedule-supplier" placeholder="Nama Supplier" required style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%;">
+                </div>
+                <div class="form-row">
+                  <label>Deskripsi Barang:</label>
+                  <textarea id="schedule-description" placeholder="Deskripsi barang yang dikirim" required style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%; min-height: 80px;"></textarea>
+                </div>
+                <div class="form-row">
+                  <label>Kuantitas:</label>
+                  <input type="text" id="schedule-quantity" placeholder="Contoh: 10 BOX / 500 KG" required style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%;">
+                </div>
+                <div class="form-row">
+                  <label>Status:</label>
+                  <select id="schedule-status" required style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%;">
+                    <option value="">Pilih Status</option>
+                    <option value="Dijadwalkan">Dijadwalkan</option>
+                    <option value="Dalam Pengiriman">Dalam Pengiriman</option>
+                    <option value="Tiba di Gudang">Tiba di Gudang</option>
+                    <option value="Selesai">Selesai</option>
+                  </select>
+                </div>
+                <div class="modal-actions">
+                  <button type="button" class="btn cancel" id="schedule-cancel">Batal</button>
+                  <button type="submit" class="btn primary">Simpan Jadwal</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
           <!-- Info Section -->
           <section class="info-section">
             <h2 class="section-title">Tentang MOPRANG</h2>
