@@ -922,14 +922,15 @@ function deleteDeliverySchedule(index) {
 
 // Setup schedule menu listeners with event delegation
 function setupScheduleMenuListeners() {
-    // Listen for schedule menu button clicks (per-row)
+    // Listen for ALL clicks
     document.addEventListener('click', function(e) {
-        const btn = e.target.closest('.schedule-menu-btn');
-        if (btn) {
+        // Check for schedule menu button (per-row)
+        const menuBtn = e.target.closest('.schedule-menu-btn');
+        if (menuBtn && menuBtn.id !== 'schedule-header-menu-btn') {
             e.preventDefault();
             e.stopPropagation();
             
-            const index = btn.getAttribute('data-index');
+            const index = menuBtn.getAttribute('data-index');
             const menu = document.getElementById(`schedule-row-menu-${index}`);
             if (!menu) return;
             
@@ -940,11 +941,28 @@ function setupScheduleMenuListeners() {
             
             // Toggle this menu
             menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            return;
         }
-    });
-    
-    // Listen for menu item clicks (Edit, Delete, Add)
-    document.addEventListener('click', function(e) {
+        
+        // Check for header menu button click (by ID)
+        if (e.target.id === 'schedule-header-menu-btn') {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const menu = document.getElementById('schedule-header-menu');
+            if (!menu) return;
+            
+            // Close all row menus
+            document.querySelectorAll('.schedule-context-menu').forEach(m => {
+                if (m !== menu) m.style.display = 'none';
+            });
+            
+            // Toggle header menu
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            return;
+        }
+        
+        // Check for menu item clicks (Edit, Delete, Add)
         const item = e.target.closest('.menu-item');
         if (item) {
             e.preventDefault();
@@ -968,32 +986,12 @@ function setupScheduleMenuListeners() {
                 const menu = document.getElementById(`schedule-row-menu-${index}`);
                 if (menu) menu.style.display = 'none';
             }
+            return;
         }
-    });
-    
-    // Listen for header menu button clicks
-    document.addEventListener('click', function(e) {
-        const headerBtn = e.target.closest('#schedule-header-menu-btn');
-        if (headerBtn) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const menu = document.getElementById('schedule-header-menu');
-            if (!menu) return;
-            
-            // Close all row menus
-            document.querySelectorAll('.schedule-context-menu').forEach(m => {
-                if (m !== menu) m.style.display = 'none';
-            });
-            
-            // Toggle header menu
-            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-        }
-    });
-    
-    // Close menus when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.schedule-menu-wrapper') && !e.target.closest('#schedule-header-menu-wrapper')) {
+        
+        // Close menus when clicking outside
+        if (!e.target.closest('.schedule-menu-wrapper') && 
+            !e.target.closest('#schedule-header-menu-wrapper')) {
             document.querySelectorAll('.schedule-context-menu').forEach(m => m.style.display = 'none');
         }
     });
@@ -1004,7 +1002,6 @@ function setupScheduleFormHandler() {
     const form = document.getElementById('schedule-form');
     const modal = document.getElementById('schedule-modal');
     const cancelBtn = document.getElementById('schedule-cancel');
-    const headerMenuBtn = document.getElementById('schedule-header-menu-btn');
     
     if (!form || !modal) return;
     
@@ -1064,35 +1061,10 @@ function setupScheduleFormHandler() {
         });
     }
     
-    // Header menu button
-    if (headerMenuBtn) {
-        headerMenuBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const menu = document.getElementById('schedule-header-menu');
-            if (!menu) return;
-            
-            // Close all row menus
-            document.querySelectorAll('.schedule-context-menu').forEach(m => {
-                if (m !== menu) m.style.display = 'none';
-            });
-            
-            // Toggle header menu
-            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-        });
-    }
-    
     // Close modal on overlay click
     modal.addEventListener('click', function(e) {
         if (e.target === modal) {
             modal.style.display = 'none';
-        }
-    });
-    
-    // Close menus when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.schedule-menu-wrapper') && !e.target.closest('#schedule-header-menu-wrapper')) {
-            document.querySelectorAll('.schedule-context-menu').forEach(m => m.style.display = 'none');
         }
     });
 }

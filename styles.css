@@ -1353,6 +1353,11 @@ footer {
 }
 
 /* Schedule Context Menu */
+.schedule-header-menu {
+  position: relative;
+  display: inline-block;
+}
+
 .schedule-menu-wrapper {
   position: relative;
   display: inline-block;

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Menu Button Functionality</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #FFD700;
+            padding-bottom: 10px;
+        }
+        .test-item {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #FFD700;
+            border-radius: 4px;
+        }
+        .status {
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-top: 10px;
+            display: inline-block;
+        }
+        .status.pass {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .instructions {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        code {
+            background: #f3f3f3;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .log-output {
+            background: #1e1e1e;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Test Menu Button Functionality</h1>
+        
+        <div class="instructions">
+            <h3>📋 Testing Instructions:</h3>
+            <ol>
+                <li>First, populate test data by visiting <strong>test-schedule.html</strong> and clicking "Tambah Data Testing"</li>
+                <li>Then come back here and click "Open Front.html" button below</li>
+                <li>Test the following in Front.html:
+                    <ul>
+                        <li>Click the header menu button (⋮) - should show "Tambah Jadwal" option</li>
+                        <li>Click "Tambah Jadwal" - should open add form modal</li>
+                        <li>Close the modal and click row menu button (⋮) - should show "Edit" and "Hapus" options</li>
+                        <li>Click "Edit" - should open edit form with schedule data</li>
+                        <li>Click "Hapus" - should confirm deletion then remove from table</li>
+                    </ul>
+                </li>
+                <li>Return here and mark test results below</li>
+            </ol>
+        </div>
+
+        <div class="test-item">
+            <h3>Test 1: Header Menu Button Click</h3>
+            <p>Check if clicking the header menu button (⋮) toggles the menu visibility</p>
+            <div id="test1-result"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>Test 2: Add Schedule (Via Header Menu)</h3>
+            <p>Check if clicking "Tambah Jadwal" in header menu opens the add form</p>
+            <div id="test2-result"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>Test 3: Row Menu Button Click</h3>
+            <p>Check if clicking a row's menu button (⋮) shows "Edit" and "Hapus" options</p>
+            <div id="test3-result"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>Test 4: Edit Menu Item</h3>
+            <p>Check if clicking "Edit" in row menu opens the edit form with data</p>
+            <div id="test4-result"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>Test 5: Delete Menu Item</h3>
+            <p>Check if clicking "Hapus" in row menu deletes the schedule after confirmation</p>
+            <div id="test5-result"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>Test 6: Click Outside Menu</h3>
+            <p>Check if clicking outside the menu closes it</p>
+            <div id="test6-result"></div>
+        </div>
+
+        <hr style="margin: 30px 0; border: none; border-top: 2px solid #FFD700;">
+
+        <h3>🚀 Actions:</h3>
+        <button onclick="openFrontPage()" style="
+            background: #FFD700;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+            margin-right: 10px;
+        " onmouseover="this.style.background='#FFA500'" onmouseout="this.style.background='#FFD700'">
+            🔗 Open Front.html (Test Interface)
+        </button>
+
+        <button onclick="openTestSchedule()" style="
+            background: #4CAF50;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            transition: background 0.3s;
+        " onmouseover="this.style.background='#45a049'" onmouseout="this.style.background='#4CAF50'">
+            📊 Open test-schedule.html (Populate Data)
+        </button>
+
+        <hr style="margin: 30px 0; border: none; border-top: 2px solid #FFD700;">
+
+        <h3>📝 Console Output:</h3>
+        <div class="log-output" id="log-output">
+            Ready to test. Open Front.html and interact with the menu buttons.
+        </div>
+
+        <h3>✅ Test Results Summary:</h3>
+        <div id="summary" style="
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        ">
+            <p>Test each feature and update results:</p>
+            <div id="summary-content">
+                <p style="color: #999;">Waiting for test results...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const logOutput = document.getElementById('log-output');
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logOutput.innerHTML += `[${timestamp}] ${message}\n`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+
+        function openFrontPage() {
+            window.open('Front.html', 'front_window');
+            log('✅ Opened Front.html in new window');
+        }
+
+        function openTestSchedule() {
+            window.open('test-schedule.html', 'schedule_window');
+            log('✅ Opened test-schedule.html in new window');
+        }
+
+        // Log initial status
+        log('🧪 Test Menu Functionality');
+        log('Step 1: Open test-schedule.html and populate data');
+        log('Step 2: Open Front.html and test menu interactions');
+        log('Step 3: Check that:');
+        log('  - Header menu (⋮) toggles "Tambah Jadwal" option');
+        log('  - Row menus (⋮) show "Edit" and "Hapus" options');
+        log('  - All menu items trigger correct functions');
+        log('  - Menus close when clicking outside');
+    </script>
+</body>
+</html>
