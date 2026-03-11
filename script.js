@@ -520,7 +520,19 @@ if(searchInput) {
 
 // Setup event listener untuk navigasi
 document.querySelectorAll('.nav-link').forEach(link => {
-    
+    link.addEventListener('click', function(e) {
+        const pageId = this.getAttribute('data-page');
+        if (pageId) {
+            e.preventDefault();
+            showPage(pageId);
+            const si = document.getElementById('search-input');
+            if (si) si.value = '';
+        }
+    });
+});
+
+// Setup event listeners for Areas page controls if present
+document.addEventListener('DOMContentLoaded', function(){
     const projectSelectArea = document.getElementById('project-select-area');
     const addAreaBtn = document.getElementById('add-area-btn');
     const addAreaModal = document.getElementById('add-area-modal');
