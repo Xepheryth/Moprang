@@ -80,6 +80,7 @@ function renderProjectCards() {
             </div>
         `;
         container.appendChild(card);
+        console.log('[renderProjectCards] Card appended for project:', project.name);
         // Make card clickable 
         card.addEventListener('click', function(e) {
             const target = e.target;
@@ -88,6 +89,8 @@ function renderProjectCards() {
             window.location.href = 'project-detail.html?name=' + encodeURIComponent(project.name);
         });
     });
+    console.log('[renderProjectCards] Finished rendering', projects.length, 'project cards');
+    console.log('[renderProjectCards] Container innerHTML now has', container.children.length, 'children');
 }
 
 // Fungsi untuk update statistik di halaman beranda
