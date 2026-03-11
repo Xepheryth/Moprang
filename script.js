@@ -79,8 +79,16 @@ function renderProjectCards() {
                 <a class="view-link" href="project-detail.html?name=${encodeURIComponent(project.name)}" onclick="localStorage.setItem('kans_current_project', ${JSON.stringify(project.name)});" title="Lihat detail project">Lihat</a>
             </div>
         `;
+        // Force visible styles with inline attributes
+        card.style.opacity = '1';
+        card.style.visibility = 'visible';
+        card.style.display = 'block';
+        card.style.minHeight = '150px';
+        
         container.appendChild(card);
         console.log('[renderProjectCards] Card appended for project:', project.name);
+        console.log('[renderProjectCards] Card inline styles set: opacity=1, visibility=visible');
+        
         // Make card clickable 
         card.addEventListener('click', function(e) {
             const target = e.target;

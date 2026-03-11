@@ -547,10 +547,10 @@ footer {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 20px;
-    min-height: auto;
+    min-height: 500px;
     width: 100%;
-    visibility: visible;
-    opacity: 1;
+    visibility: visible !important;
+    opacity: 1 !important;
     position: static;
 }
 
@@ -561,9 +561,9 @@ footer {
     padding: 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
-    display: block;
-    visibility: visible;
-    opacity: 1;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
     width: 100%;
 }
 .project-card-actions {
