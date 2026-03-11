@@ -21,23 +21,17 @@ function getProjectsWithShipments() {
 // Fungsi untuk render project cards
 function renderProjectCards() {
     const container = document.getElementById('projects-container');
-    if (!container) {
-        console.warn('❌ projects-container element not found! (Not on shipments page?)');
-        return;
-    }
+    if (!container) return;
     
     container.innerHTML = '';
     
     const projects = getProjectsWithShipments();
     const projectAreasMap = getProjectAreasMap();
-    console.log('📊 renderProjectCards() called - Found', projects.length, 'projects in storage');
     
     if (projects.length === 0) {
-        console.warn('⚠️ No projects found in localStorage');
         container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999;">Tidak ada project. Klik tombol (+) untuk menambah project baru.</p>';
         return;
     }
-    console.log('✅ Rendering', projects.length, 'project cards');
     
     projects.forEach(project => {
         const card = document.createElement('div');
@@ -172,38 +166,25 @@ function renderProjectAreaDropdown() {
 // Render area cards for a project index
 function renderAreaCards(projectIdx) {
     const container = document.getElementById('areas-container');
-    if (!container) {
-        console.error('areas-container element not found!');
-        return;
-    }
+    if (!container) return;
+    
     container.innerHTML = '';
     const projects = getProjectList();
     
-    console.log('renderAreaCards called with projectIdx:', projectIdx);
-    console.log('Total projects:', projects.length);
-    
     if (!projects || !projects[projectIdx]) {
-        console.warn('Invalid projectIdx:', projectIdx, 'Available projects:', projects.length);
         container.innerHTML = '<p style="color:#999;">Pilih project terlebih dahulu.</p>';
         return;
     }
     
     const projectName = projects[projectIdx].name;
-    console.log('Rendering areas for project:', projectName);
-    
     const map = getProjectAreasMap();
     let areas = map[projectName] || [];
     
-    console.log('Areas found for project "' + projectName + '":', areas.length);
-    
     if (areas.length === 0) {
         // Jika belum ada area, tampilkan pesan kosong (jangan buat default)
-        console.log('No areas found, showing empty state');
         container.innerHTML = '<p style="color:#999; text-align:center; padding:20px;">Belum ada area di project ini. Klik "+ Tambah Area" untuk membuat area baru.</p>';
         return;
     }
-    
-    console.log('About to render', areas.length, 'area cards');
     
     areas.forEach((area, idx) => {
         // Calculate realisasi percentage for this area
@@ -252,7 +233,6 @@ function renderAreaCards(projectIdx) {
         });
 
         container.appendChild(card);
-        console.log('✓ Area card rendered for:', area.name);
 
         // Edit handler
         const editBtn = card.querySelector('.edit-area-btn');
@@ -410,7 +390,6 @@ if (addProjectForm) {
 
 // Navigasi Halaman
 function showPage(pageId) {
-    console.log('showPage called with:', pageId);
     
     // Sembunyikan semua halaman
     document.querySelectorAll('.page').forEach(page => {
@@ -421,9 +400,9 @@ function showPage(pageId) {
     const targetPage = document.getElementById(pageId);
     if(targetPage) {
         targetPage.classList.add('active');
-        console.log('✓ Page "' + pageId + '" is now active');
     } else {
         console.error('Page element with id "' + pageId + '" not found!');
+        return;
         return;
     }
     
@@ -434,10 +413,7 @@ function showPage(pageId) {
     
     const navLink = document.querySelector(`.nav-link[data-page="${pageId}"]`);
     if(navLink) {
-        navLink.classList.add('active');
-        console.log('✓ Nav link for page "' + pageId + '" marked as active');
-    } else {
-        console.log('⚠ No nav link found for page "' + pageId + '" (this is OK for query-param loaded pages)');
+        navLink.classList.add('active');;
     }
 
     // Show/hide add project button based on page
@@ -453,7 +429,6 @@ function showPage(pageId) {
 
     // Render project cards when showing shipments page
     if(pageId === 'shipments'){
-        console.log('📄 Shipments page - rendering project cards...');
         renderProjectCards();
     }
 
@@ -470,7 +445,6 @@ function showPage(pageId) {
 
     // If navigating to profile page, load profile data
     if(pageId === 'profile'){
-        console.log('👤 Profile page - loading profile...');
         loadProfile();
         setupProfilePhotoUpload(); // Setup photo upload handler
     }
@@ -546,20 +520,6 @@ if(searchInput) {
 
 // Setup event listener untuk navigasi
 document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', function(e) {
-        const pageId = this.getAttribute('data-page');
-        if (pageId) {
-            e.preventDefault();
-            showPage(pageId);
-            const si = document.getElementById('search-input');
-            if (si) si.value = '';
-        }
-    });
-});
-
-// Setup event listeners for Areas page controls if present
-document.addEventListener('DOMContentLoaded', function(){
-    console.log('=== DOMContentLoaded started ===');
     
     const projectSelectArea = document.getElementById('project-select-area');
     const addAreaBtn = document.getElementById('add-area-btn');
@@ -568,15 +528,6 @@ document.addEventListener('DOMContentLoaded', function(){
     const addAreaCancel = document.getElementById('add-area-cancel');
     const areasContainer = document.getElementById('areas-container');
     
-    console.log('Form elements found:', {
-        projectSelectArea: !!projectSelectArea,
-        addAreaBtn: !!addAreaBtn,
-        addAreaModal: !!addAreaModal,
-        addAreaForm: !!addAreaForm,
-        addAreaCancel: !!addAreaCancel,
-        areasContainer: !!areasContainer
-    });
-
     if(projectSelectArea){
         renderProjectAreaDropdown();
         projectSelectArea.addEventListener('change', function(){
@@ -588,7 +539,6 @@ document.addEventListener('DOMContentLoaded', function(){
     if(addAreaForm){
         addAreaForm.addEventListener('submit', function(e){
             e.preventDefault();
-            console.log('✓ Add area form submitted');
             
             if(!isAdminUser()){
                 alert('Akses ditolak: hanya admin yang dapat menambah area.');
@@ -599,8 +549,6 @@ document.addEventListener('DOMContentLoaded', function(){
             const areaName = areaNameInput ? areaNameInput.value.trim() : '';
             const sel = document.getElementById('project-select-area');
             const projIdx = sel ? parseInt(sel.value) : -1;
-            
-            console.log('Form data:', {areaName, projIdx, selValue: sel ? sel.value : 'N/A'});
             
             if(!areaName || projIdx < 0){ 
                 alert('Pilih project dan isi nama area'); 
@@ -614,7 +562,6 @@ document.addEventListener('DOMContentLoaded', function(){
             }
             
             const projectName = projects[projIdx].name;
-            console.log('✓ Project selected:', projectName);
             
             const map = getProjectAreasMap();
             if(!map[projectName]) map[projectName] = [];
@@ -627,22 +574,17 @@ document.addEventListener('DOMContentLoaded', function(){
             
             map[projectName].push({ name: areaName, items: [] });
             setProjectAreasMap(map);
-            console.log('✓ Area created:', areaName, 'in project:', projectName);
-            console.log('✓ Stored to localStorage');
             
             // Prepare redirect URL
             const encodedProject = encodeURIComponent(projectName);
             const encodedArea = encodeURIComponent(areaName);
             const redirectUrl = 'area-detail.html?project=' + encodedProject + '&area=' + encodedArea;
             
-            console.log('✓ Redirect URL:', redirectUrl);
-            
             // Reset form dan close modal dahulu
             addAreaForm.reset();
             closeModal(addAreaModal);
             
             // Langsung redirect tanpa delay
-            console.log('✓ Redirecting now...');
             window.location.href = redirectUrl;
         });
     }
@@ -652,8 +594,6 @@ document.addEventListener('DOMContentLoaded', function(){
     }
     if(addAreaCancel){ addAreaCancel.addEventListener('click', function(){ closeModal(addAreaModal); }); }
     if(addAreaModal){ addAreaModal.addEventListener('click', function(e){ if(e.target===addAreaModal) closeModal(addAreaModal); }); }
-    
-    console.log('=== DOMContentLoaded completed - all listeners attached ===');
 });
 
 // Minimal authentication helpers (no modals) — keep profile UI functional
@@ -697,7 +637,6 @@ function clearCurrentUser(){
 
 function loadProfile(){
     const cur = localStorage.getItem('kans_current');
-    console.log('🎯 loadProfile() called - Current user:', cur);
     
     const usernameEl = document.getElementById('profile-username');
     const emailEl = document.getElementById('profile-email');
@@ -707,12 +646,10 @@ function loadProfile(){
     const error = document.getElementById('profile-error');
     
     if(!cur){
-        console.error('❌ No current user set!');
         if(error){ error.textContent = 'Tidak ada user. Silakan login.'; error.style.display='block'; }
         if(profileInfo) profileInfo.style.display='none';
         return;
     }
-    console.log('✅ User found:', cur);
     
     if(loading) loading.style.display='none';
     if(error) error.style.display='none';
@@ -950,22 +887,16 @@ function deleteDeliverySchedule(index) {
 
 // Setup schedule menu listeners with event delegation
 function setupScheduleMenuListeners() {
-    console.log('✅ Schedule menu listeners initialized');
-    
     // Listen for ALL clicks
     document.addEventListener('click', function(e) {
         // Check for header menu button (by closest)
         const headerMenuBtn = e.target.closest('#schedule-header-menu-btn');
         if (headerMenuBtn) {
-            console.log('📋 Header menu button clicked');
             e.preventDefault();
             e.stopPropagation();
             
             const menu = document.getElementById('schedule-header-menu');
-            if (!menu) {
-                console.warn('⚠️ Header menu not found');
-                return;
-            }
+            if (!menu) return;
             
             // Close all row menus
             document.querySelectorAll('.schedule-context-menu').forEach(m => {
@@ -974,23 +905,18 @@ function setupScheduleMenuListeners() {
             
             // Toggle header menu
             menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-            console.log('🔄 Header menu toggled to:', menu.style.display);
             return;
         }
         
         // Check for schedule menu button (per-row)
         const menuBtn = e.target.closest('.schedule-menu-btn');
         if (menuBtn && !headerMenuBtn) {
-            console.log('📊 Row menu button clicked, index:', menuBtn.getAttribute('data-index'));
             e.preventDefault();
             e.stopPropagation();
             
             const index = menuBtn.getAttribute('data-index');
             const menu = document.getElementById(`schedule-row-menu-${index}`);
-            if (!menu) {
-                console.warn('⚠️ Row menu not found for index:', index);
-                return;
-            }
+            if (!menu) return;
             
             // Close all other menus
             document.querySelectorAll('.schedule-context-menu').forEach(m => {
@@ -999,33 +925,28 @@ function setupScheduleMenuListeners() {
             
             // Toggle this menu
             menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-            console.log('🔄 Row menu toggled to:', menu.style.display);
             return;
         }
         
         // Check for menu item clicks (Edit, Delete, Add)
         const item = e.target.closest('.menu-item');
         if (item) {
-            console.log('🎯 Menu item clicked:', item.className);
             e.preventDefault();
             e.stopPropagation();
             
             if (item.classList.contains('add-item')) {
-                console.log('➕ Opening add schedule modal');
                 openAddScheduleModal();
                 // Close header menu
                 const headerMenu = document.getElementById('schedule-header-menu');
                 if (headerMenu) headerMenu.style.display = 'none';
             } else if (item.classList.contains('edit-item')) {
                 const index = item.getAttribute('data-index');
-                console.log('✏️ Editing schedule at index:', index);
                 editDeliverySchedule(index);
                 // Close row menu
                 const menu = document.getElementById(`schedule-row-menu-${index}`);
                 if (menu) menu.style.display = 'none';
             } else if (item.classList.contains('delete-item')) {
                 const index = item.getAttribute('data-index');
-                console.log('🗑️ Deleting schedule at index:', index);
                 deleteDeliverySchedule(index);
                 // Close row menu
                 const menu = document.getElementById(`schedule-row-menu-${index}`);
@@ -1039,7 +960,6 @@ function setupScheduleMenuListeners() {
             !e.target.closest('#schedule-header-menu-wrapper')) {
             const openMenus = document.querySelectorAll('.schedule-context-menu[style*="display: block"]');
             if (openMenus.length > 0) {
-                console.log('❌ Closing menus due to outside click');
                 document.querySelectorAll('.schedule-context-menu').forEach(m => m.style.display = 'none');
             }
         }
@@ -1135,7 +1055,6 @@ function initializeTestData() {
         if ((projects.length > 0 && !hasDeliverySchedules) || 
             (projects.length > 0 && !hasCurrent) ||
             (projects.length > 0 && !hasUsers)) {
-            console.log('⚠️ Detected incomplete data - clearing and reinitializing...');
             localStorage.removeItem('kans_projects');
             localStorage.removeItem('kans_project_areas');
             localStorage.removeItem('kans_delivery_schedules');
@@ -1144,7 +1063,6 @@ function initializeTestData() {
             localStorage.removeItem('kans_user_profiles');
         }
     } catch(e) {
-        console.log('⚠️ Error validating localStorage - clearing corrupt data');
         localStorage.removeItem('kans_projects');
         localStorage.removeItem('kans_project_areas');
         localStorage.removeItem('kans_delivery_schedules');
@@ -1221,8 +1139,6 @@ function initializeTestData() {
             }
         };
         localStorage.setItem('kans_user_profiles', JSON.stringify(userProfiles));
-        
-        console.log('✅ Test data initialized - projects, areas, user, schedules, and profiles created');
     }
 }
 
@@ -1232,7 +1148,6 @@ initializeTestData();
 // Ensure user is initialized - set to admin if not set
 if (!localStorage.getItem('kans_current')) {
     localStorage.setItem('kans_current', 'admin');
-    console.log('✅ Set default user: admin');
 }
 
 // Initialize delivery schedule (jika di halaman dengan schedule)
@@ -1256,35 +1171,28 @@ setTimeout(function handleQueryOnLoad(){
         const params = new URLSearchParams(window.location.search);
         const open = params.get('open');
         const projectName = params.get('project') || params.get('name');
-        console.log('handleQueryOnLoad running - open:', open, 'projectName:', projectName);
         
         if(open === 'areas' && projectName){
             // ensure project dropdown is populated
             renderProjectAreaDropdown();
-            console.log('✓ Project dropdown rendered');
             
             // find index of project
             const projects = getProjectList();
-            console.log('Projects in localStorage:', projects.map(p => p.name));
             
             const idx = projects.findIndex(p => p.name === projectName);
-            console.log('Found project "' + projectName + '" at index:', idx);
             
             if(idx >= 0){
                 showPage('areas');
-                console.log('✓ Areas page shown');
                 
                 const sel = document.getElementById('project-select-area');
                 if(sel){ 
                     sel.value = idx; 
-                    console.log('✓ Dropdown value set to:', idx);
-                    console.log('✓ Calling renderAreaCards with index:', idx);
                     renderAreaCards(idx); 
                 } else {
-                    console.warn('project-select-area element not found');
+                    // project-select-area element not found
                 }
             } else {
-                console.warn('Project "' + projectName + '" not found in projects list');
+                // Project not found in projects list
                 // Fallback: show the areas page anyway
                 showPage('areas');
                 renderProjectAreaDropdown();
