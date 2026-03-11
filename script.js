@@ -1138,12 +1138,58 @@ function initializeTestData() {
             ]
         };
         localStorage.setItem('kans_project_areas', JSON.stringify(areasMap));
-        console.log('✅ Test data initialized');
+        
+        // Initialize current user as 'admin'
+        localStorage.setItem('kans_current', 'admin');
+        
+        // Initialize user list with admin user
+        const users = [
+            { username: 'admin', email: 'admin@moprang.local' }
+        ];
+        localStorage.setItem('kans_users', JSON.stringify(users));
+        
+        // Initialize delivery schedules
+        const schedules = [
+            {
+                date: '2026-01-15',
+                supplier: 'PT Supplier A',
+                description: 'Barang elektronik batch 1',
+                quantity: '100 BOX',
+                status: 'Dijadwalkan',
+                createdAt: new Date().toISOString()
+            },
+            {
+                date: '2026-02-01',
+                supplier: 'PT Supplier B',
+                description: 'Tekstil dan pakaian',
+                quantity: '200 BUNDLE',
+                status: 'Pengiriman',
+                createdAt: new Date().toISOString()
+            }
+        ];
+        localStorage.setItem('kans_delivery_schedules', JSON.stringify(schedules));
+        
+        // Initialize user profile for admin
+        const userProfiles = {
+            admin: {
+                photo: null,
+                uploadedAt: null
+            }
+        };
+        localStorage.setItem('kans_user_profiles', JSON.stringify(userProfiles));
+        
+        console.log('✅ Test data initialized - projects, areas, user, schedules, and profiles created');
     }
 }
 
 // Call initialization
 initializeTestData();
+
+// Ensure user is initialized - set to admin if not set
+if (!localStorage.getItem('kans_current')) {
+    localStorage.setItem('kans_current', 'admin');
+    console.log('✅ Set default user: admin');
+}
 
 // Initialize delivery schedule (jika di halaman dengan schedule)
 if(document.getElementById('schedule-table')) {
