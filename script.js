@@ -1113,7 +1113,10 @@ window.clearCurrentUser = clearCurrentUser;
 // Initialize test data if localStorage is empty
 function initializeTestData() {
     const projects = JSON.parse(localStorage.getItem('kans_projects') || '[]');
-    if (projects.length === 0) {
+    const hasDeliverySchedules = localStorage.getItem('kans_delivery_schedules');
+    
+    // Initialize if no projects exist OR if there are projects but no schedules (incomplete init)
+    if (projects.length === 0 || !hasDeliverySchedules) {
         const testProjects = [
             { name: 'Project A - Jakarta', period: 'Jan - Mar 2026' },
             { name: 'Project B - Surabaya', period: 'Feb - Apr 2026' }
