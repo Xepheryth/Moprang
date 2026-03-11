@@ -1333,6 +1333,93 @@ window.fixCardVisibility = function() {
         console.log('Fixed card', idx + 1);
     });
     
-    console.log('Fixed', cards.length, 'cards');
     console.log('If cards now appear, the issue is CSS-related.');
+};
+
+// Advanced diagnostic to check actual layout dimensions
+window.debugCardLayout = function() {
+    console.log('===== CARD LAYOUT DEBUG =====');
+    const container = document.getElementById('projects-container');
+    const page = document.getElementById('shipments');
+    const pageContent = document.querySelector('.page-content');
+    
+    if (!container) {
+        console.log('❌ Container not found');
+        return;
+    }
+    
+    if (container.children.length === 0) {
+        console.log('❌ No cards in container');
+        return;
+    }
+    
+    const card = container.children[0];
+    
+    console.log('\n1. CARD DIMENSIONS:');
+    console.log('  offsetWidth:', card.offsetWidth, 'px');
+    console.log('  offsetHeight:', card.offsetHeight, 'px');
+    console.log('  clientWidth:', card.clientWidth, 'px');
+    console.log('  clientHeight:', card.clientHeight, 'px');
+    const rect = card.getBoundingClientRect();
+    console.log('  BoundingClientRect: top=' + rect.top + ', left=' + rect.left + ', width=' + rect.width + ', height=' + rect.height);
+    
+    console.log('\n2. CARD COMPUTED STYLES:');
+    const cardStyles = getComputedStyle(card);
+    console.log('  display:', cardStyles.display);
+    console.log('  visibility:', cardStyles.visibility);
+    console.log('  opacity:', cardStyles.opacity);
+    console.log('  position:', cardStyles.position);
+    console.log('  overflow:', cardStyles.overflow);
+    console.log('  width:', cardStyles.width);
+    console.log('  height:', cardStyles.height);
+    console.log('  color:', cardStyles.color);
+    
+    console.log('\n3. CONTAINER DIMENSIONS:');
+    console.log('  offsetWidth:', container.offsetWidth, 'px');
+    console.log('  offsetHeight:', container.offsetHeight, 'px');
+    console.log('  clientWidth:', container.clientWidth, 'px');
+    console.log('  clientHeight:', container.clientHeight, 'px');
+    const containerRect = container.getBoundingClientRect();
+    console.log('  BoundingClientRect: top=' + containerRect.top + ', left=' + containerRect.left + ', width=' + containerRect.width + ', height=' + containerRect.height);
+    
+    console.log('\n4. CONTAINER COMPUTED STYLES:');
+    const containerStyles = getComputedStyle(container);
+    console.log('  display:', containerStyles.display);
+    console.log('  grid-template-columns:', containerStyles.gridTemplateColumns);
+    console.log('  gap:', containerStyles.gap);
+    console.log('  overflow:', containerStyles.overflow);
+    
+    console.log('\n5. PAGE STYLES:');
+    console.log('  shipments page active:', page ? page.classList.contains('active') : 'N/A');
+    if (page) {
+        const pageStyles = getComputedStyle(page);
+        console.log('  display:', pageStyles.display);
+        console.log('  visibility:', pageStyles.visibility);
+        console.log('  opacity:', pageStyles.opacity);
+        console.log('  height:', pageStyles.height);
+        console.log('  overflow:', pageStyles.overflow);
+    }
+    
+    if (pageContent) {
+        const pageContentStyles = getComputedStyle(pageContent);
+        console.log('\n6. PAGE-CONTENT STYLES:');
+        console.log('  display:', pageContentStyles.display);
+        console.log('  height:', pageContentStyles.height);
+        console.log('  overflow:', pageContentStyles.overflow);
+    }
+    
+    console.log('\n===== ANALYSIS =====');
+    if (card.offsetWidth === 0 || card.offsetHeight === 0) {
+        console.log('❌ Card has 0 dimensions! Likely CSS sizing issue.');
+    } else if (rect.top < 0 || rect.left < 0) {
+        console.log('⚠️ Card is positioned off-screen (negative coordinates)');
+    } else if (cardStyles.display === 'none') {
+        console.log('❌ Card display is "none"');
+    } else if (cardStyles.visibility === 'hidden') {
+        console.log('❌ Card visibility is "hidden"');
+    } else if (cardStyles.opacity === '0') {
+        console.log('❌ Card opacity is 0');
+    } else {
+        console.log('✓ Card appears to have valid layout. Scroll down to find it?');
+    }
 };
