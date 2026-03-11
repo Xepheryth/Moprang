@@ -1238,9 +1238,11 @@ footer {
 
 /* Schedule Section */
 .schedule-section {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 165, 0, 0.1) 100%);
+  padding: 60px 20px;
+  border-radius: 12px;
   margin: 0 auto 60px auto;
   max-width: 1200px;
-  padding: 0 20px;
 }
 
 .schedule-table {
