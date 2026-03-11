@@ -1243,32 +1243,96 @@ window.testRenderDiagnostics = function() {
     console.log('   projects-container found:', !!container);
     if (container) {
         console.log('   Container display style:', window.getComputedStyle(container).display);
+        console.log('   Container visibility:', window.getComputedStyle(container).visibility);
+        console.log('   Container width:', window.getComputedStyle(container).width);
+        console.log('   Container height:', window.getComputedStyle(container).height);
         console.log('   Container disabled:', container.disabled);
         console.log('   Container innerHTML length:', container.innerHTML.length);
+        console.log('   Container children count:', container.children.length);
+        
+        if (container.children.length > 0) {
+            const firstCard = container.children[0];
+            console.log('\n   First card details:');
+            console.log('     Tag:', firstCard.tagName);
+            console.log('     Class:', firstCard.className);
+            console.log('     Display:', window.getComputedStyle(firstCard).display);
+            console.log('     Visibility:', window.getComputedStyle(firstCard).visibility);
+            console.log('     Width:', window.getComputedStyle(firstCard).width);
+            console.log('     Height:', window.getComputedStyle(firstCard).height);
+            console.log('     Opacity:', window.getComputedStyle(firstCard).opacity);
+            console.log('     Position:', window.getComputedStyle(firstCard).position);
+            console.log('     Overflow:', window.getComputedStyle(firstCard).overflow);
+            console.log('     HTML preview:', firstCard.innerHTML.substring(0, 100) + '...');
+        }
     }
     
     const shipmentPage = document.getElementById('shipments');
+    console.log('\n3. Checking page element...');
     console.log('   shipments page found:', !!shipmentPage);
     if (shipmentPage) {
         console.log('   Page display style:', window.getComputedStyle(shipmentPage).display);
+        console.log('   Page visibility:', window.getComputedStyle(shipmentPage).visibility);
+        console.log('   Page opacity:', window.getComputedStyle(shipmentPage).opacity);
         console.log('   Page has active class:', shipmentPage.classList.contains('active'));
+        console.log('   Page width:', window.getComputedStyle(shipmentPage).width);
+        console.log('   Page height:', window.getComputedStyle(shipmentPage).height);
     }
     
-    console.log('\n3. Testing renderProjectCards function...');
+    const shipmentSection = document.getElementById('shipments-section');
+    console.log('\n4. Checking section element...');
+    console.log('   shipments-section found:', !!shipmentSection);
+    if (shipmentSection) {
+        console.log('   Section display:', window.getComputedStyle(shipmentSection).display);
+        console.log('   Section background:', window.getComputedStyle(shipmentSection).backgroundColor);
+        console.log('   Section padding:', window.getComputedStyle(shipmentSection).padding);
+    }
+    
+    console.log('\n5. Testing renderProjectCards function...');
     console.log('   Calling renderProjectCards()...');
     renderProjectCards();
     console.log('   After rendering, container children:', container ? container.children.length : 'N/A');
     
-    console.log('\n4. Manual page navigation test...');
-    console.log('   Calling showPage("shipments")...');
-    showPage('shipments');
-    setTimeout(function() {
-        console.log('   After showPage, container children:', container ? container.children.length : 'N/A');
-        console.log('   After showPage, shipments page active:', shipmentPage ? shipmentPage.classList.contains('active') : 'N/A');
-    }, 200);
+    console.log('\n===== END DIAGNOSTIC TEST =====');
+    console.log('NEXT STEPS:');
+    if (container && container.children.length > 0) {
+        console.log('✓ Cards ARE in DOM. Check CSS above.');
+        console.log('- If display is "grid" but cards hidden, opacity/visibility might be issue');
+        console.log('- If width/height is 0, check CSS grid configuration');
+    } else if (!container) {
+        console.log('✗ Container element not found in HTML');
+    } else {
+        console.log('✗ No cards were created');
+    }
+};
+
+// Quick CSS fix test - temporarily make cards visible
+window.fixCardVisibility = function() {
+    const container = document.getElementById('projects-container');
+    const cards = document.querySelectorAll('.project-card');
     
-    console.log('===== END DIAGNOSTIC TEST =====');
-    console.log('If you see 0 children above, the cards are not being created.');
-    console.log('If container is not found, check the HTML structure.');
-    console.log('If display is "none", there might be a CSS issue.');
+    if (!container) {
+        console.log('Container not found');
+        return;
+    }
+    
+    console.log('Attempting to fix card visibility...');
+    
+    // Force container to show as grid
+    container.style.display = 'grid !important';
+    container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(350px, 1fr))';
+    container.style.gap = '20px';
+    container.style.minHeight = '200px';
+    
+    // Force each card to be visible
+    cards.forEach((card, idx) => {
+        card.style.display = 'block !important';
+        card.style.visibility = 'visible !important';
+        card.style.opacity = '1 !important';
+        card.style.width = 'auto !important';
+        card.style.height = 'auto !important';
+        console.log('Fixed card', idx + 1);
+    });
+    
+    console.log('Fixed', cards.length, 'cards');
+    console.log('If cards now appear, the issue is CSS-related.');
 };
