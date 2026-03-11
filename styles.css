@@ -1238,7 +1238,9 @@ footer {
 
 /* Schedule Section */
 .schedule-section {
-  margin-bottom: 60px;
+  margin: 0 auto 60px auto;
+  max-width: 1200px;
+  padding: 0 20px;
 }
 
 .schedule-table {
