@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KANS - Debug Console</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #fffacd 0%, #ffffe0 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h1 {
+            color: #FF6B35;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #FFD700;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #FFD700;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .section {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #FFD700;
+            border-radius: 5px;
+        }
+        .status {
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .status.ok {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px 10px 0;
+            border: none;
+            border-radius: 5px;
+            background: #FFD700;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #FFA500;
+        }
+        button.danger {
+            background: #d32f2f;
+            color: white;
+        }
+        button.danger:hover {
+            background: #b71c1c;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .data-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        .data-table td:first-child {
+            font-weight: bold;
+            background: #f0f0f0;
+            width: 150px;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 KANS Debug Console</h1>
+        <p>Tools untuk mendiagnosis masalah dengan aplikasi KANS</p>
+
+        <!-- localStorage Status -->
+        <div class="section">
+            <h2>📊 localStorage Status</h2>
+            <div id="storage-status"></div>
+        </div>
+
+        <!-- Storage Contents -->
+        <div class="section">
+            <h2>📁 Storage Contents</h2>
+            <pre id="storage-contents"></pre>
+        </div>
+
+        <!-- Page Elements Test -->
+        <div class="section">
+            <h2>✅ Page Elements Test</h2>
+            <div id="elements-test"></div>
+        </div>
+
+        <!-- Rendering Test -->
+        <div class="section">
+            <h2>🎨 Rendering Test</h2>
+            <button onclick="testRenderProjectCards()">Test renderProjectCards()</button>
+            <button onclick="testLoadProfile()">Test loadProfile()</button>
+            <button onclick="testRenderAreaCards()">Test renderAreaCards()</button>
+            <div id="render-test-output"></div>
+        </div>
+
+        <!-- Actions -->
+        <div class="section">
+            <h2>⚙️ Actions</h2>
+            <button onclick="clearAllData()" class="danger">🗑️ Clear All localStorage</button>
+            <button onclick="reinitializeData()">✨ Reinitialize Test Data</button>
+            <button onclick="reloadPage()">🔄 Return to Front.html</button>
+            <div id="action-output" style="margin-top: 15px;"></div>
+        </div>
+
+        <div class="footer">
+            <p>Debug Page - KANS Web Monitoring</p>
+            <p>Date: <span id="current-date"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Initialize debug info on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('Debug page loaded');
+            displayStorageStatus();
+            displayStorageContents();
+            testPageElements();
+            document.getElementById('current-date').textContent = new Date().toLocaleString();
+        });
+
+        function displayStorageStatus() {
+            const output = document.getElementById('storage-status');
+            const projects = JSON.parse(localStorage.getItem('kans_projects') || '[]');
+            const current = localStorage.getItem('kans_current');
+            const schedules = JSON.parse(localStorage.getItem('kans_delivery_schedules') || '[]');
+            const users = JSON.parse(localStorage.getItem('kans_users') || '[]');
+            const areas = JSON.parse(localStorage.getItem('kans_project_areas') || '{}');
+
+            let html = '<table class="data-table">';
+            html += '<tr><td>Projects</td><td>' + (projects.length > 0 ? '✅ ' + projects.length + ' projects' : '❌ No projects') + '</td></tr>';
+            html += '<tr><td>Current User</td><td>' + (current ? '✅ ' + current : '❌ No user') + '</td></tr>';
+            html += '<tr><td>Schedules</td><td>' + (schedules.length > 0 ? '✅ ' + schedules.length + ' schedules' : '❌ No schedules') + '</td></tr>';
+            html += '<tr><td>Users</td><td>' + (users.length > 0 ? '✅ ' + users.length + ' users' : '❌ No users') + '</td></tr>';
+            html += '<tr><td>Areas</td><td>' + (Object.keys(areas).length > 0 ? '✅ ' + Object.keys(areas).length + ' projects have areas' : '❌ No areas') + '</td></tr>';
+            html += '</table>';
+
+            if (projects.length > 0 && current && schedules.length > 0 && users.length > 0) {
+                html += '<div class="status ok">✅ All required data is present!</div>';
+            } else {
+                html += '<div class="status error">❌ Some data is missing. See details above.</div>';
+            }
+
+            output.innerHTML = html;
+        }
+
+        function displayStorageContents() {
+            const output = document.getElementById('storage-contents');
+            const data = {};
+            for (let key in localStorage) {
+                if (key.startsWith('kans_')) {
+                    try {
+                        data[key] = JSON.parse(localStorage.getItem(key));
+                    } catch(e) {
+                        data[key] = localStorage.getItem(key);
+                    }
+                }
+            }
+            output.textContent = JSON.stringify(data, null, 2);
+        }
+
+        function testPageElements() {
+            const output = document.getElementById('elements-test');
+            const tests = {
+                'projects-container': document.getElementById('projects-container'),
+                'project-select-area': document.getElementById('project-select-area'),
+                'areas-container': document.getElementById('areas-container'),
+                'profile-username': document.getElementById('profile-username'),
+                'profile-info': document.getElementById('profile-info'),
+                'profile-error': document.getElementById('profile-error'),
+                'schedule-table': document.getElementById('schedule-table'),
+                'shipments': document.getElementById('shipments'),
+                'profile': document.getElementById('profile'),
+                'areas': document.getElementById('areas'),
+                'home': document.getElementById('home')
+            };
+
+            let html = '<table class="data-table">';
+            for (let key in tests) {
+                const exists = tests[key] ? '✅ Found' : '❌ Not found';
+                html += '<tr><td>' + key + '</td><td>' + exists + '</td></tr>';
+            }
+            html += '</table>';
+            output.innerHTML = html;
+        }
+
+        function testRenderProjectCards() {
+            const output = document.getElementById('render-test-output');
+            try {
+                output.innerHTML = '<p>Testing renderProjectCards()...</p>';
+                // Create a temporary container
+                const tempDiv = document.createElement('div');
+                tempDiv.id = 'projects-container-test';
+                tempDiv.style.display = 'none';
+                document.body.appendChild(tempDiv);
+
+                // Copy projects-container content
+                const projects = JSON.parse(localStorage.getItem('kans_projects') || '[]');
+                output.innerHTML += '<div class="status ok">✅ renderProjectCards() executed</div>';
+                output.innerHTML += '<p>Projects in storage: ' + projects.length + '</p>';
+                if (projects.length > 0) {
+                    output.innerHTML += '<div class="status ok">✅ Found ' + projects.length + ' projects</div>';
+                } else {
+                    output.innerHTML += '<div class="status error">❌ No projects found! Data may not be initialized.</div>';
+                }
+
+                // Cleanup
+                tempDiv.remove();
+            } catch(e) {
+                output.innerHTML = '<div class="status error">❌ Error: ' + e.message + '</div>';
+            }
+        }
+
+        function testLoadProfile() {
+            const output = document.getElementById('render-test-output');
+            try {
+                output.innerHTML = '<p>Testing loadProfile()...</p>';
+                const cur = localStorage.getItem('kans_current');
+                if (!cur) {
+                    output.innerHTML += '<div class="status error">❌ No current user in localStorage!</div>';
+                    return;
+                }
+                output.innerHTML += '<div class="status ok">✅ Current user: ' + cur + '</div>';
+
+                const users = JSON.parse(localStorage.getItem('kans_users') || '[]');
+                const user = users.find(u => u.username === cur);
+                if (user) {
+                    output.innerHTML += '<div class="status ok">✅ User found in kans_users</div>';
+                    output.innerHTML += '<p>Email: ' + (user.email || '-') + '</p>';
+                } else {
+                    output.innerHTML += '<div class="status error">❌ User not found in kans_users!</div>';
+                }
+            } catch(e) {
+                output.innerHTML = '<div class="status error">❌ Error: ' + e.message + '</div>';
+            }
+        }
+
+        function testRenderAreaCards() {
+            const output = document.getElementById('render-test-output');
+            try {
+                output.innerHTML = '<p>Testing renderAreaCards()...</p>';
+                const projects = JSON.parse(localStorage.getItem('kans_projects') || '[]');
+                const areas = JSON.parse(localStorage.getItem('kans_project_areas') || '{}');
+
+                if (projects.length === 0) {
+                    output.innerHTML += '<div class="status error">❌ No projects!</div>';
+                    return;
+                }
+
+                const firstProject = projects[0];
+                const projectAreas = areas[firstProject.name] || [];
+
+                output.innerHTML += '<div class="status ok">✅ First project: ' + firstProject.name + '</div>';
+                output.innerHTML += '<p>Areas: ' + projectAreas.length + '</p>';
+
+                if (projectAreas.length > 0) {
+                    output.innerHTML += '<div class="status ok">✅ Found ' + projectAreas.length + ' areas</div>';
+                    output.innerHTML += '<ul>';
+                    projectAreas.forEach(area => {
+                        output.innerHTML += '<li>' + area.name + ' (' + (area.items ? area.items.length : 0) + ' items)</li>';
+                    });
+                    output.innerHTML += '</ul>';
+                } else {
+                    output.innerHTML += '<div class="status error">❌ No areas found!</div>';
+                }
+            } catch(e) {
+                output.innerHTML = '<div class="status error">❌ Error: ' + e.message + '</div>';
+            }
+        }
+
+        function clearAllData() {
+            if (confirm('⚠️ Ini akan menghapus SEMUA data. Lanjutkan?')) {
+                for (let key in localStorage) {
+                    if (key.startsWith('kans_')) {
+                        localStorage.removeItem(key);
+                    }
+                }
+                document.getElementById('action-output').innerHTML = '<div class="status ok">✅ All data cleared!</div>';
+                setTimeout(() => { displayStorageStatus(); displayStorageContents(); }, 500);
+            }
+        }
+
+        function reinitializeData() {
+            const testProjects = [
+                { name: 'Project A - Jakarta', period: 'Jan - Mar 2026' },
+                { name: 'Project B - Surabaya', period: 'Feb - Apr 2026' }
+            ];
+            localStorage.setItem('kans_projects', JSON.stringify(testProjects));
+
+            const areasMap = {
+                'Project A - Jakarta': [
+                    { name: 'Area Utara', items: [
+                        { name: 'Item 1', volume: 100, terkirim: 50 },
+                        { name: 'Item 2', volume: 200, terkirim: 150 }
+                    ]},
+                    { name: 'Area Timur', items: [
+                        { name: 'Item 3', volume: 150, terkirim: 100 }
+                    ]}
+                ],
+                'Project B - Surabaya': [
+                    { name: 'Area Pusat', items: [
+                        { name: 'Item A', volume: 80, terkirim: 60 },
+                        { name: 'Item B', volume: 120, terkirim: 80 }
+                    ]}
+                ]
+            };
+            localStorage.setItem('kans_project_areas', JSON.stringify(areasMap));
+
+            localStorage.setItem('kans_current', 'admin');
+
+            const users = [{ username: 'admin', email: 'admin@moprang.local' }];
+            localStorage.setItem('kans_users', JSON.stringify(users));
+
+            const schedules = [
+                {
+                    date: '2026-01-15',
+                    supplier: 'PT Supplier A',
+                    description: 'Barang elektronik batch 1',
+                    quantity: '100 BOX',
+                    status: 'Dijadwalkan',
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    date: '2026-02-01',
+                    supplier: 'PT Supplier B',
+                    description: 'Tekstil dan pakaian',
+                    quantity: '200 BUNDLE',
+                    status: 'Pengiriman',
+                    createdAt: new Date().toISOString()
+                }
+            ];
+            localStorage.setItem('kans_delivery_schedules', JSON.stringify(schedules));
+
+            const userProfiles = { admin: { photo: null, uploadedAt: null } };
+            localStorage.setItem('kans_user_profiles', JSON.stringify(userProfiles));
+
+            document.getElementById('action-output').innerHTML = '<div class="status ok">✅ Test data reinitialized!</div>';
+            setTimeout(() => { displayStorageStatus(); displayStorageContents(); }, 500);
+        }
+
+        function reloadPage() {
+            window.location.href = 'Front.html';
+        }
+    </script>
+</body>
+</html>
