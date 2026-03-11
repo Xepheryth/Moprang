@@ -1112,6 +1112,35 @@ window.clearCurrentUser = clearCurrentUser;
 
 // Initialize test data if localStorage is empty
 function initializeTestData() {
+    // First validate existing data - if any critical data is missing or invalid, force reset
+    try {
+        const projects = JSON.parse(localStorage.getItem('kans_projects') || '[]');
+        const hasDeliverySchedules = localStorage.getItem('kans_delivery_schedules');
+        const hasCurrent = localStorage.getItem('kans_current');
+        const hasUsers = localStorage.getItem('kans_users');
+        
+        // If data exists but is incomplete, clear and reinitialize
+        if ((projects.length > 0 && !hasDeliverySchedules) || 
+            (projects.length > 0 && !hasCurrent) ||
+            (projects.length > 0 && !hasUsers)) {
+            console.log('⚠️ Detected incomplete data - clearing and reinitializing...');
+            localStorage.removeItem('kans_projects');
+            localStorage.removeItem('kans_project_areas');
+            localStorage.removeItem('kans_delivery_schedules');
+            localStorage.removeItem('kans_current');
+            localStorage.removeItem('kans_users');
+            localStorage.removeItem('kans_user_profiles');
+        }
+    } catch(e) {
+        console.log('⚠️ Error validating localStorage - clearing corrupt data');
+        localStorage.removeItem('kans_projects');
+        localStorage.removeItem('kans_project_areas');
+        localStorage.removeItem('kans_delivery_schedules');
+        localStorage.removeItem('kans_current');
+        localStorage.removeItem('kans_users');
+        localStorage.removeItem('kans_user_profiles');
+    }
+    
     const projects = JSON.parse(localStorage.getItem('kans_projects') || '[]');
     const hasDeliverySchedules = localStorage.getItem('kans_delivery_schedules');
     
