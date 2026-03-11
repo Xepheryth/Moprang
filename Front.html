@@ -315,12 +315,86 @@
      <script>
        (function(){
          try{
+           // Auto-initialize data before checking login
+           const projects = JSON.parse(localStorage.getItem('kans_projects') || '[]');
+           const hasDeliverySchedules = localStorage.getItem('kans_delivery_schedules');
+           
+           // Initialize if no projects exist OR if there are projects but no schedules (incomplete init)
+           if (projects.length === 0 || !hasDeliverySchedules) {
+               const testProjects = [
+                   { name: 'Project A - Jakarta', period: 'Jan - Mar 2026' },
+                   { name: 'Project B - Surabaya', period: 'Feb - Apr 2026' }
+               ];
+               localStorage.setItem('kans_projects', JSON.stringify(testProjects));
+               
+               const areasMap = {
+                   'Project A - Jakarta': [
+                       { name: 'Area Utara', items: [
+                           { name: 'Item 1', volume: 100, terkirim: 50 },
+                           { name: 'Item 2', volume: 200, terkirim: 150 }
+                       ]},
+                       { name: 'Area Timur', items: [
+                           { name: 'Item 3', volume: 150, terkirim: 100 }
+                       ]}
+                   ],
+                   'Project B - Surabaya': [
+                       { name: 'Area Pusat', items: [
+                           { name: 'Item A', volume: 80, terkirim: 60 },
+                           { name: 'Item B', volume: 120, terkirim: 80 }
+                       ]}
+                   ]
+               };
+               localStorage.setItem('kans_project_areas', JSON.stringify(areasMap));
+               
+               localStorage.setItem('kans_current', 'admin');
+               
+               const users = [
+                   { username: 'admin', email: 'admin@moprang.local' }
+               ];
+               localStorage.setItem('kans_users', JSON.stringify(users));
+               
+               const schedules = [
+                   {
+                       date: '2026-01-15',
+                       supplier: 'PT Supplier A',
+                       description: 'Barang elektronik batch 1',
+                       quantity: '100 BOX',
+                       status: 'Dijadwalkan',
+                       createdAt: new Date().toISOString()
+                   },
+                   {
+                       date: '2026-02-01',
+                       supplier: 'PT Supplier B',
+                       description: 'Tekstil dan pakaian',
+                       quantity: '200 BUNDLE',
+                       status: 'Pengiriman',
+                       createdAt: new Date().toISOString()
+                   }
+               ];
+               localStorage.setItem('kans_delivery_schedules', JSON.stringify(schedules));
+               
+               const userProfiles = {
+                   admin: {
+                       photo: null,
+                       uploadedAt: null
+                   }
+               };
+               localStorage.setItem('kans_user_profiles', JSON.stringify(userProfiles));
+               
+               console.log('✅ Auto-initialized test data in Front.html');
+           }
+           
+           // Ensure kans_current is set
+           if (!localStorage.getItem('kans_current')) {
+               localStorage.setItem('kans_current', 'admin');
+           }
+           
            const cur = localStorage.getItem('kans_current') || localStorage.getItem('kans_token');
            if(!cur){
              // Jika tidak login, arahkan ke halaman login
              window.location.href = 'index.html';
            }
-         }catch(e){ /* ignore */ }
+         }catch(e){ console.error('Init error:', e); }
        })();
      </script>
      <script src="script.js?v=20260225-16"></script>
