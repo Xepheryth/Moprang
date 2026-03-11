@@ -20,13 +20,19 @@ function getProjectsWithShipments() {
 
 // Fungsi untuk render project cards
 function renderProjectCards() {
+    console.log('[renderProjectCards] Function called');
     const container = document.getElementById('projects-container');
-    if (!container) return;
+    if (!container) {
+        console.error('[renderProjectCards] ERROR: projects-container not found');
+        return;
+    }
     
+    console.log('[renderProjectCards] Container found, clearing...');
     container.innerHTML = '';
     
     const projects = getProjectsWithShipments();
     const projectAreasMap = getProjectAreasMap();
+    console.log('[renderProjectCards] Projects loaded:', projects.length, 'projects');
     
     if (projects.length === 0) {
         container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999;">Tidak ada project. Klik tombol (+) untuk menambah project baru.</p>';
@@ -390,6 +396,7 @@ if (addProjectForm) {
 
 // Navigasi Halaman
 function showPage(pageId) {
+    console.log('[showPage] Called with pageId:', pageId);
     
     // Sembunyikan semua halaman
     document.querySelectorAll('.page').forEach(page => {
@@ -400,6 +407,7 @@ function showPage(pageId) {
     const targetPage = document.getElementById(pageId);
     if(targetPage) {
         targetPage.classList.add('active');
+        console.log('[showPage] Page "' + pageId + '" set to active');
     } else {
         console.error('Page element with id "' + pageId + '" not found!');
         return;
@@ -429,6 +437,7 @@ function showPage(pageId) {
 
     // Render project cards when showing shipments page
     if(pageId === 'shipments'){
+        console.log('[showPage] Rendering project cards for shipments page');
         renderProjectCards();
     }
 
