@@ -60,16 +60,20 @@
             </div>
             <div id="schedule-container" style="overflow-x: auto;">
               <table id="schedule-table" class="schedule-table">
-                <thead id="schedule-thead">
+                <thead>
                   <tr>
                     <th>NO</th>
-                    <th>NAMA SUPPLIER</th>
-                    <th id="schedule-columns-header"></th>
+                    <th>TANGGAL PENGIRIMAN</th>
+                    <th>SUPPLIER</th>
+                    <th>DESKRIPSI BARANG</th>
+                    <th>KUANTITAS</th>
+                    <th>STATUS</th>
+                    <th style="width: 60px; text-align: center;">⋮</th>
                   </tr>
                 </thead>
                 <tbody id="schedule-tbody">
                   <tr style="text-align: center;">
-                    <td colspan="3" style="padding: 20px; color: #999;">Tidak ada jadwal pengiriman</td>
+                    <td colspan="7" style="padding: 20px; color: #999;">Tidak ada jadwal pengiriman</td>
                   </tr>
                 </tbody>
               </table>
@@ -88,10 +92,6 @@
                 <div class="form-row">
                   <label>Supplier:</label>
                   <input type="text" id="schedule-supplier" placeholder="Nama Supplier" required style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%;">
-                </div>
-                <div class="form-row">
-                  <label>Area Pengiriman:</label>
-                  <input type="text" id="schedule-area" placeholder="Contoh: PERTAGAS, SEMARANG, CILACAP" required style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100%;">
                 </div>
                 <div class="form-row">
                   <label>Deskripsi Barang:</label>
