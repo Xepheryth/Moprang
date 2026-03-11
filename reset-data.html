@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Data - KANS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #FFD700;
+            text-align: center;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .btn-reset {
+            background: #d32f2f;
+            color: white;
+        }
+        .btn-reset:hover {
+            background: #b71c1c;
+        }
+        .btn-init {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-init:hover {
+            background: #45a049;
+        }
+        .btn-back {
+            background: #FFD700;
+            color: #000;
+        }
+        .btn-back:hover {
+            background: #FFA500;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            border-left: 4px solid #2196F3;
+        }
+        .success {
+            background: #c8e6c9;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            border-left: 4px solid #4CAF50;
+            display: none;
+        }
+        .error {
+            background: #ffcdd2;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            border-left: 4px solid #d32f2f;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Reset Data KANS</h1>
+        
+        <div class="info">
+            <strong>⚠️ Peringatan:</strong> Tombol di bawah akan menghapus SEMUA data lokal Anda termasuk projects, areas, schedules, dan profile foto.
+        </div>
+        
+        <div id="success-msg" class="success"></div>
+        <div id="error-msg" class="error"></div>
+        
+        <button class="btn btn-reset" onclick="resetAllData()">🗑️ Hapus SEMUA Data</button>
+        <button class="btn btn-init" onclick="initializeTestData()">✅ Inisialisasi Data Test</button>
+        <button class="btn btn-init" onclick="setupTestUser()">👤 Setup User Admin</button>
+        <button class="btn btn-back" onclick="goBack()">← Kembali ke Front.html</button>
+    </div>
+
+    <script>
+        function showSuccess(msg) {
+            const el = document.getElementById('success-msg');
+            el.textContent = msg;
+            el.style.display = 'block';
+            document.getElementById('error-msg').style.display = 'none';
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('error-msg');
+            el.textContent = msg;
+            el.style.display = 'block';
+            document.getElementById('success-msg').style.display = 'none';
+        }
+
+        function resetAllData() {
+            if (!confirm('⚠️ Yakin hapus SEMUA data? Tindakan ini TIDAK bisa dibatalkan!')) {
+                return;
+            }
+            
+            try {
+                // Clear all KANS related localStorage
+                const keys = Object.keys(localStorage).filter(k => k.startsWith('kans_'));
+                keys.forEach(k => localStorage.removeItem(k));
+                
+                showSuccess('✅ Semua data berhasil dihapus! Silakan refresh halaman.');
+                console.log('🗑️ Cleared keys:', keys);
+            } catch(e) {
+                showError('❌ Error saat menghapus data: ' + e.message);
+            }
+        }
+
+        function initializeTestData() {
+            try {
+                const testProjects = [
+                    { name: 'Project A - Jakarta', period: 'Jan - Mar 2026' },
+                    { name: 'Project B - Surabaya', period: 'Feb - Apr 2026' },
+                    { name: 'Project C - Bandung', period: 'Mar - May 2026' }
+                ];
+                localStorage.setItem('kans_projects', JSON.stringify(testProjects));
+                console.log('✅ Projects saved:', testProjects);
+                
+                const areasMap = {
+                    'Project A - Jakarta': [
+                        { 
+                            name: 'Area Utara', 
+                            items: [
+                                { name: 'Item 1', volume: 100, terkirim: 50 },
+                                { name: 'Item 2', volume: 200, terkirim: 150 }
+                            ]
+                        },
+                        { 
+                            name: 'Area Timur', 
+                            items: [
+                                { name: 'Item 3', volume: 150, terkirim: 100 }
+                            ]
+                        },
+                        { 
+                            name: 'Area Selatan', 
+                            items: [
+                                { name: 'Item 4', volume: 120, terkirim: 120 }
+                            ]
+                        }
+                    ],
+                    'Project B - Surabaya': [
+                        { 
+                            name: 'Area Pusat', 
+                            items: [
+                                { name: 'Item A', volume: 80, terkirim: 60 },
+                                { name: 'Item B', volume: 120, terkirim: 80 }
+                            ]
+                        },
+                        { 
+                            name: 'Area Barat', 
+                            items: [
+                                { name: 'Item C', volume: 100, terkirim: 70 }
+                            ]
+                        }
+                    ],
+                    'Project C - Bandung': [
+                        { 
+                            name: 'Area Utama', 
+                            items: [
+                                { name: 'Item X', volume: 200, terkirim: 100 },
+                                { name: 'Item Y', volume: 150, terkirim: 150 }
+                            ]
+                        }
+                    ]
+                };
+                localStorage.setItem('kans_project_areas', JSON.stringify(areasMap));
+                console.log('✅ Areas and items saved');
+                
+                const schedules = [
+                    {
+                        date: '2026-03-15',
+                        supplier: 'PT Supplier A',
+                        description: 'Barang elektronik',
+                        quantity: '50 BOX',
+                        status: 'Dijadwalkan',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        date: '2026-03-20',
+                        supplier: 'PT Supplier B',
+                        description: 'Spare parts',
+                        quantity: '30 PAKET',
+                        status: 'Dalam Pengiriman',
+                        createdAt: new Date().toISOString()
+                    }
+                ];
+                localStorage.setItem('kans_delivery_schedules', JSON.stringify(schedules));
+                console.log('✅ Delivery schedules saved');
+                
+                showSuccess('✅ Data test berhasil diinisialisasi! Silakan refresh halaman.');
+            } catch(e) {
+                showError('❌ Error: ' + e.message);
+            }
+        }
+
+        function setupTestUser() {
+            try {
+                // Set current user
+                localStorage.setItem('kans_current', 'admin');
+                console.log('✅ Current user set to: admin');
+                
+                // Set users list
+                const users = [
+                    { username: 'admin', password: 'admin123', email: 'admin@kans.com', role: 'admin' },
+                    { username: 'user', password: 'user123', email: 'user@kans.com', role: 'user' }
+                ];
+                localStorage.setItem('kans_users', JSON.stringify(users));
+                console.log('✅ Users saved');
+                
+                // Set test profile
+                const profiles = {
+                    'admin': {
+                        photo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 24 24" fill="%23FFD700"%3E%3Ccircle cx="12" cy="8" r="4"/%3E%3Cpath d="M12 14c-6 0-8 3-8 5v3h16v-3c0-2-2-5-8-5z"/%3E%3C/svg%3E',
+                        uploadedAt: new Date().toISOString()
+                    }
+                };
+                localStorage.setItem('kans_user_profiles', JSON.stringify(profiles));
+                console.log('✅ Profile data saved');
+                
+                showSuccess('✅ User admin berhasil di-setup! Silakan refresh halaman.');
+            } catch(e) {
+                showError('❌ Error: ' + e.message);
+            }
+        }
+
+        function goBack() {
+            window.location.href = 'Front.html';
+        }
+
+        // Auto-init on load
+        window.addEventListener('load', function() {
+            console.log('Reset Data page loaded');
+            console.log('Current localStorage keys:', Object.keys(localStorage).filter(k => k.startsWith('kans_')));
+        });
+    </script>
+</body>
+</html>
