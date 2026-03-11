@@ -21,17 +21,23 @@ function getProjectsWithShipments() {
 // Fungsi untuk render project cards
 function renderProjectCards() {
     const container = document.getElementById('projects-container');
-    if (!container) return; // Exit silently if container doesn't exist (e.g., on area-detail page)
+    if (!container) {
+        console.warn('❌ projects-container element not found! (Not on shipments page?)');
+        return;
+    }
     
     container.innerHTML = '';
     
     const projects = getProjectsWithShipments();
     const projectAreasMap = getProjectAreasMap();
+    console.log('📊 renderProjectCards() called - Found', projects.length, 'projects in storage');
     
     if (projects.length === 0) {
+        console.warn('⚠️ No projects found in localStorage');
         container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999;">Tidak ada project. Klik tombol (+) untuk menambah project baru.</p>';
         return;
     }
+    console.log('✅ Rendering', projects.length, 'project cards');
     
     projects.forEach(project => {
         const card = document.createElement('div');
@@ -447,6 +453,7 @@ function showPage(pageId) {
 
     // Render project cards when showing shipments page
     if(pageId === 'shipments'){
+        console.log('📄 Shipments page - rendering project cards...');
         renderProjectCards();
     }
 
@@ -463,6 +470,7 @@ function showPage(pageId) {
 
     // If navigating to profile page, load profile data
     if(pageId === 'profile'){
+        console.log('👤 Profile page - loading profile...');
         loadProfile();
         setupProfilePhotoUpload(); // Setup photo upload handler
     }
@@ -689,6 +697,8 @@ function clearCurrentUser(){
 
 function loadProfile(){
     const cur = localStorage.getItem('kans_current');
+    console.log('🎯 loadProfile() called - Current user:', cur);
+    
     const usernameEl = document.getElementById('profile-username');
     const emailEl = document.getElementById('profile-email');
     const photoEl = document.getElementById('profile-photo');
@@ -697,10 +707,12 @@ function loadProfile(){
     const error = document.getElementById('profile-error');
     
     if(!cur){
+        console.error('❌ No current user set!');
         if(error){ error.textContent = 'Tidak ada user. Silakan login.'; error.style.display='block'; }
         if(profileInfo) profileInfo.style.display='none';
         return;
     }
+    console.log('✅ User found:', cur);
     
     if(loading) loading.style.display='none';
     if(error) error.style.display='none';
