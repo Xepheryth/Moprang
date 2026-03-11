@@ -804,53 +804,67 @@ function saveDeliverySchedules(schedules) {
 // Render delivery schedule table
 function renderDeliverySchedule() {
     const tbody = document.getElementById('schedule-tbody');
-    if (!tbody) return;
+    const thead = document.getElementById('schedule-thead');
+    if (!tbody || !thead) return;
     
     const schedules = getDeliverySchedules();
     
     if (schedules.length === 0) {
-        tbody.innerHTML = '<tr style="text-align: center;"><td colspan="7" style="padding: 20px; color: #999;">Tidak ada jadwal pengiriman</td></tr>';
+        tbody.innerHTML = '<tr style="text-align: center;"><td colspan="50" style="padding: 20px; color: #999;">Tidak ada jadwal pengiriman</td></tr>';
         return;
     }
     
-    // Sort by delivery date (newest first)
-    schedules.sort((a, b) => new Date(b.date) - new Date(a.date));
+    // Get unique suppliers
+    const suppliers = [...new Set(schedules.map(s => s.supplier))].sort();
     
-    let html = '';
-    schedules.forEach((schedule, index) => {
-        const dateObj = new Date(schedule.date + 'T00:00:00');
-        const dateStr = dateObj.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+    // Get unique areas
+    const areas = [...new Set(schedules.map(s => s.area || '-'))].sort();
+    
+    // Build table header with areas as columns
+    let headerHtml = '<tr><th style="min-width: 40px;">NO</th><th style="min-width: 200px;">NAMA SUPPLIER</th>';
+    areas.forEach(area => {
+        headerHtml += `<th style="min-width: 150px; text-align: center;">${area}</th>`;
+    });
+    headerHtml += '</tr>';
+    
+    const theadTr = thead.querySelector('tr');
+    if (theadTr) theadTr.innerHTML = headerHtml;
+    
+    // Build table body with suppliers as rows
+    let bodyHtml = '';
+    suppliers.forEach((supplier, rowIndex) => {
+        bodyHtml += `<tr>
+            <td style="text-align: center; width: 40px; padding: 10px;">${rowIndex + 1}</td>
+            <td style="padding: 10px; font-weight: 500;">${supplier}</td>`;
         
-        // Map status to class name
-        let statusClass = '';
-        if (schedule.status === 'Dijadwalkan') statusClass = 'dijadwalkan';
-        else if (schedule.status === 'Dalam Pengiriman') statusClass = 'pengiriman';
-        else if (schedule.status === 'Tiba di Gudang') statusClass = 'tiba';
-        else if (schedule.status === 'Selesai') statusClass = 'selesai';
-        else statusClass = 'dijadwalkan';
+        // Add cells for each area
+        areas.forEach(area => {
+            // Find schedules for this supplier and area
+            const scheduleForCell = schedules.find(s => s.supplier === supplier && (s.area || '-') === area);
+            
+            if (scheduleForCell) {
+                const dateObj = new Date(scheduleForCell.date + 'T00:00:00');
+                const dateStr = dateObj.toLocaleDateString('id-ID', { month: '2-digit', day: '2-digit' });
+                
+                let statusClass = '';
+                if (scheduleForCell.status === 'Dijadwalkan') statusClass = 'dijadwalkan';
+                else if (scheduleForCell.status === 'Dalam Pengiriman') statusClass = 'pengiriman';
+                else if (scheduleForCell.status === 'Tiba di Gudang') statusClass = 'tiba';
+                else if (scheduleForCell.status === 'Selesai') statusClass = 'selesai';
+                else statusClass = 'dijadwalkan';
+                
+                bodyHtml += `<td style="text-align: center; padding: 8px;" title="${scheduleForCell.description || ''}">
+                    <span class="status-badge ${statusClass}" style="display: inline-block; padding: 4px 8px; font-size: 11px;">${dateStr}</span>
+                </td>`;
+            } else {
+                bodyHtml += '<td style="text-align: center; padding: 8px; color: #ddd;">-</td>';
+            }
+        });
         
-        const statusDisplay = schedule.status || 'Dijadwalkan';
-        
-        html += `<tr>
-            <td style="text-align: center; width: 40px;">${index + 1}</td>
-            <td>${dateStr}</td>
-            <td>${schedule.supplier || '-'}</td>
-            <td>${schedule.description || '-'}</td>
-            <td>${schedule.quantity || '-'}</td>
-            <td><span class="status-badge ${statusClass}">${statusDisplay}</span></td>
-            <td style="text-align: center; width: 60px;">
-                ${isAdminUser() ? `<div class="schedule-menu-wrapper">
-                    <button class="schedule-menu-btn" data-index="${index}" type="button">⋮</button>
-                    <div class="schedule-context-menu" id="schedule-row-menu-${index}" style="display:none;">
-                        <button type="button" class="menu-item edit-item" data-index="${index}">✏️ Edit</button>
-                        <button type="button" class="menu-item delete-item" data-index="${index}">🗑️ Hapus</button>
-                    </div>
-                </div>` : '-'}
-            </td>
-        </tr>`;
+        bodyHtml += '</tr>';
     });
     
-    tbody.innerHTML = html;
+    tbody.innerHTML = bodyHtml;
 }
 
 // Show/hide admin controls based on user role
@@ -891,6 +905,7 @@ function editDeliverySchedule(index) {
     title.textContent = 'Edit Jadwal Pengiriman';
     document.getElementById('schedule-date').value = schedule.date || '';
     document.getElementById('schedule-supplier').value = schedule.supplier || '';
+    document.getElementById('schedule-area').value = schedule.area || '';
     document.getElementById('schedule-description').value = schedule.description || '';
     document.getElementById('schedule-quantity').value = schedule.quantity || '';
     document.getElementById('schedule-status').value = schedule.status || '';
@@ -1037,11 +1052,12 @@ function setupScheduleFormHandler() {
         
         const date = document.getElementById('schedule-date').value;
         const supplier = document.getElementById('schedule-supplier').value;
+        const area = document.getElementById('schedule-area').value;
         const description = document.getElementById('schedule-description').value;
         const quantity = document.getElementById('schedule-quantity').value;
         const status = document.getElementById('schedule-status').value;
         
-        if (!date || !supplier || !description || !quantity || !status) {
+        if (!date || !supplier || !area || !description || !quantity || !status) {
             alert('❌ Semua field harus diisi');
             return;
         }
@@ -1052,6 +1068,7 @@ function setupScheduleFormHandler() {
         const newSchedule = {
             date: date,
             supplier: supplier,
+            area: area,
             description: description,
             quantity: quantity,
             status: status,
