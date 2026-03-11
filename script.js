@@ -452,8 +452,13 @@ function showPage(pageId) {
 
     // Render areas when showing areas page
     if(pageId === 'areas'){
-        renderAreas();
         renderProjectAreaDropdown();
+        // Auto-select first project if available
+        const sel = document.getElementById('project-select-area');
+        if(sel && sel.options.length > 0) {
+            sel.value = '0';
+            renderAreaCards(0);
+        }
     }
 
     // If navigating to profile page, load profile data
@@ -1104,6 +1109,41 @@ function setupScheduleFormHandler() {
 // initialize UI state
 renderUserState();
 window.clearCurrentUser = clearCurrentUser;
+
+// Initialize test data if localStorage is empty
+function initializeTestData() {
+    const projects = JSON.parse(localStorage.getItem('kans_projects') || '[]');
+    if (projects.length === 0) {
+        const testProjects = [
+            { name: 'Project A - Jakarta', period: 'Jan - Mar 2026' },
+            { name: 'Project B - Surabaya', period: 'Feb - Apr 2026' }
+        ];
+        localStorage.setItem('kans_projects', JSON.stringify(testProjects));
+        
+        const areasMap = {
+            'Project A - Jakarta': [
+                { name: 'Area Utara', items: [
+                    { name: 'Item 1', volume: 100, terkirim: 50 },
+                    { name: 'Item 2', volume: 200, terkirim: 150 }
+                ]},
+                { name: 'Area Timur', items: [
+                    { name: 'Item 3', volume: 150, terkirim: 100 }
+                ]}
+            ],
+            'Project B - Surabaya': [
+                { name: 'Area Pusat', items: [
+                    { name: 'Item A', volume: 80, terkirim: 60 },
+                    { name: 'Item B', volume: 120, terkirim: 80 }
+                ]}
+            ]
+        };
+        localStorage.setItem('kans_project_areas', JSON.stringify(areasMap));
+        console.log('✅ Test data initialized');
+    }
+}
+
+// Call initialization
+initializeTestData();
 
 // Initialize delivery schedule (jika di halaman dengan schedule)
 if(document.getElementById('schedule-table')) {
