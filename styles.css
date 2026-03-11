@@ -325,10 +325,14 @@ header {
 .page {
     display: none;
     animation: fadeIn 0.3s ease-in;
+    width: 100%;
+    min-height: auto;
 }
 
 .page.active {
     display: block;
+    visibility: visible;
+    opacity: 1;
 }
 
 @keyframes fadeIn {
@@ -341,17 +345,23 @@ header {
 }
 
 .page-content {
-    background-color: #fcfc8c00;
+    background-color: transparent;
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: none;
+    width: 100%;
+    visibility: visible;
+    opacity: 1;
 }
 
 #shipments-section {
-    background-color: #ffffe000;
+    background-color: transparent;
     padding: 20px;
     border-radius: 8px;
-    border: 1px solid #ffd90000;
+    border: none;
+    width: 100%;
+    visibility: visible;
+    opacity: 1;
 }
 
 h1, h2 {
@@ -537,7 +547,11 @@ footer {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 20px;
-    min-height: 200px;
+    min-height: auto;
+    width: 100%;
+    visibility: visible;
+    opacity: 1;
+    position: static;
 }
 
 .project-card {
@@ -547,6 +561,10 @@ footer {
     padding: 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
+    display: block;
+    visibility: visible;
+    opacity: 1;
+    width: 100%;
 }
 .project-card-actions {
     display: flex;
