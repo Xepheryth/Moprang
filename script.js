@@ -1226,3 +1226,49 @@ setTimeout(function handleQueryOnLoad(){
         console.error('Error in handleQueryOnLoad:', e);
     }
 }, 100);
+
+// ===== DIAGNOSTIC TESTING FUNCTION =====
+// Call from browser console: testRenderDiagnostics()
+window.testRenderDiagnostics = function() {
+    console.log('===== DIAGNOSTIC TEST =====');
+    console.log('1. Checking localStorage data...');
+    const projects = JSON.parse(localStorage.getItem('kans_projects') || '[]');
+    console.log('   Projects in localStorage:', projects);
+    
+    const projectAreas = JSON.parse(localStorage.getItem('kans_project_areas') || '{}');
+    console.log('   Project areas in localStorage:', projectAreas);
+    
+    console.log('\n2. Checking DOM elements...');
+    const container = document.getElementById('projects-container');
+    console.log('   projects-container found:', !!container);
+    if (container) {
+        console.log('   Container display style:', window.getComputedStyle(container).display);
+        console.log('   Container disabled:', container.disabled);
+        console.log('   Container innerHTML length:', container.innerHTML.length);
+    }
+    
+    const shipmentPage = document.getElementById('shipments');
+    console.log('   shipments page found:', !!shipmentPage);
+    if (shipmentPage) {
+        console.log('   Page display style:', window.getComputedStyle(shipmentPage).display);
+        console.log('   Page has active class:', shipmentPage.classList.contains('active'));
+    }
+    
+    console.log('\n3. Testing renderProjectCards function...');
+    console.log('   Calling renderProjectCards()...');
+    renderProjectCards();
+    console.log('   After rendering, container children:', container ? container.children.length : 'N/A');
+    
+    console.log('\n4. Manual page navigation test...');
+    console.log('   Calling showPage("shipments")...');
+    showPage('shipments');
+    setTimeout(function() {
+        console.log('   After showPage, container children:', container ? container.children.length : 'N/A');
+        console.log('   After showPage, shipments page active:', shipmentPage ? shipmentPage.classList.contains('active') : 'N/A');
+    }, 200);
+    
+    console.log('===== END DIAGNOSTIC TEST =====');
+    console.log('If you see 0 children above, the cards are not being created.');
+    console.log('If container is not found, check the HTML structure.');
+    console.log('If display is "none", there might be a CSS issue.');
+};
